@@ -1,7 +1,7 @@
 <?php
     include('functions.php');
-    handleRoute();
     authorized();
+    handleRoute();
 ?>
 <!DOCTYPE html>
 <html lang="en">

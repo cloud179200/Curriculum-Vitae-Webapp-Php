@@ -3,6 +3,10 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Firebase\JWT\ExpiredException;
+require "C:\\xampp\\htdocs\\baitaplon\\vendor\\autoload.php";
 
 // function getAllPosts(){
 //     // B1. Ket noi CSDL
@@ -64,6 +68,33 @@ use PHPMailer\PHPMailer\Exception;
 //     return $post;
 // }
 
+function isTokenValid($token){
+    require("constant.php");
+    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    try{
+        $jwtDecode = JWT::decode($token, new Key($secretKey, 'HS512'));
+        if(!property_exists($jwtDecode, "userName")){
+            $sql = "DELETE FROM users_online WHERE token='.$token.'";
+            mysqli_query($conn, $sql);
+            return false;
+        }
+        $userName = $jwtDecode->userName;
+        $sql = "SELECT * FROM users_online WHERE token='$token' AND username='$userName'";
+        $result = mysqli_query($conn, $sql);
+        mysqli_close($conn);
+        if (mysqli_num_rows($result) == 0) {
+            return false;
+        }
+        return $userName;
+    }catch(ExpiredException $e){
+        $sql = "DELETE FROM users_online WHERE token='.$token.'";
+        mysqli_query($conn, $sql);
+        return false;
+    }
+}
 
 function checkUserExist($userName, $email)
 {
@@ -83,133 +114,174 @@ function checkUserExist($userName, $email)
         return true;
     }
 
-
     return false;
 }
 
 
-function addNewUser($fistName, $lastName, $userName, $email, $avatar, $pass)
+function addNewUser($fistName, $lastName, $userName, $email, $pass)
 {
-    // B1. Ket noi CSDL
     $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
-    // B2. Truy van
     $pass_hash = password_hash($pass, PASSWORD_DEFAULT);
-    $sql = "INSERT INTO users (user_firstname, user_lastname, username, user_email, user_image, user_password)
-          VALUES ('$fistName', '$lastName', '$userName', '$email', '$avatar', '$pass_hash')";
-    $n = mysqli_query($conn, $sql); //Nó trả về SỐ BẢN GHI CHÈN THÀNH CÔNG 
-
-    // B4. Dong ket noi
-    mysqli_close($conn);
-    // B3. Xu ly ket qua
+    $sql = "INSERT INTO users (user_firstname, user_lastname, username, user_email, user_password, user_role, verified)
+          VALUES ('$fistName', '$lastName', '$userName', '$email', '$pass_hash', 'user', 'FALSE')";
+    $n = mysqli_query($conn, $sql);
+    
     if ($n > 0) {
         return true;
     }
     return false;
 }
+function verifyUser($token)
+{
+    require("constant.php");
+    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    $username = isTokenValid($token);
+    if(!$username){
+        return false;
+    }
+    $sql = "UPDATE users SET verified=TRUE WHERE username='$username'";
+    mysqli_query($conn, $sql);
+    $sql = "DELETE from users_online where token='$token'";
+    mysqli_query($conn, $sql);
+    mysqli_close($conn);
+    return true;
+}
+function sendEmailForActivation($toEmail, $verifyToken)
+{
+    require("constant.php");
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();                                            //Send using SMTP
+        $mail->Mailer = "smtp";
+        $mail->SMTPAuth   = true;
+        $mail->Port       = 587;
+        $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
+        $mail->Username   = 'cloud179200@gmail.com';                     //SMTP username
+        $mail->Password   = 'vnmvjxogdwbsjwrc';                               //SMTP password
 
-// function sendEmailForActivation($toEmail){
-//     // Đây mới chỉ là ĐIỀU KIỆN CẦN
+        //Recipients
+        $mail->addAddress($toEmail);     //Add a recipient
+        $mail->setFrom('cloud179200@gmail.com', 'Web CV Admin');
 
-//     // Sử dụng Gmail làm trung gian gửi nhận Email
-//     $mail = new PHPMailer(true);
-
-//     try {
-//         //Server settings
-//         $mail["SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
-//         $mail["isSMTP();                                            //Send using SMTP
-//         $mail["Host       = 'smtp.example.com';                     //Set the SMTP server to send through
-//         $mail["SMTPAuth   = true;                                   //Enable SMTP authentication
-//         $mail["Username   = 'user@example.com';                     //SMTP username
-//         $mail["Password   = 'secret';                               //SMTP password
-//         $mail["SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
-//         $mail["Port       = 465;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
-
-//         //Recipients
-//         $mail["setFrom('from@example.com', 'Mailer');
-//         $mail["addAddress('joe@example.net', 'Joe User');     //Add a recipient
-//         $mail["addAddress('ellen@example.com');               //Name is optional
-//         $mail["addReplyTo('info@example.com', 'Information');
-//         $mail["addCC('cc@example.com');
-//         $mail["addBCC('bcc@example.com');
-
-//         //Attachments
-//         $mail["addAttachment('/var/tmp/file.tar.gz');         //Add attachments
-//         $mail["addAttachment('/tmp/image.jpg', 'new.jpg');    //Optional name
-
-//         //Content
-//         $mail["isHTML(true);                                  //Set email format to HTML
-//         $mail["Subject = 'Here is the subject';
-//         $mail["Body    = 'This is the HTML message body <b>in bold!</b>';
-//         $mail["AltBody = 'This is the body in plain text for non-HTML mail clients';
-
-//         $mail["send();
-//         echo 'Message has been sent';
-//     } catch (Exception $e) {
-//         echo "Message could not be sent. Mailer Error: {$mail["ErrorInfo}";
-//     }
-// }
-
-function checkLogin($user, $pass)
+        //Content
+        $mail->isHTML(true);
+        $mail->AddCC($toEmail, $toEmail);
+        $mail->Subject = 'Verify your web CV account';
+        $link = $host . $route["default"] . "/verify.php?token=" . $verifyToken;
+        $mail->msgHTML('<a href="'.$link.'">Verify link</a>');
+        if (!$mail->send()) {
+            var_dump($mail);
+            return false;
+        }
+        return true;
+    } catch (Exception $e) {
+        die($e);
+        return false;
+    }
+}
+function removeUser($username)
 {
     $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
-    $sql = "SELECT * FROM users WHERE username='$user' OR user_email='$user'";
-    $result = mysqli_query($conn, $sql); 
+    $sql = "DELETE FROM users_online WHERE username='$username'";
+    mysqli_query($conn, $sql);
+    $sql = "DELETE FROM users WHERE username='$username'";
+    mysqli_query($conn, $sql);
+    mysqli_close($conn);
+}
+function checkLogin($username, $pass)
+{
+    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    $sql = "SELECT * FROM users WHERE username='$username' AND verified=TRUE";
+    $result = mysqli_query($conn, $sql);
     if (mysqli_num_rows($result) === 0) {
         return false;
     }
     $row = mysqli_fetch_assoc($result);
-    $pass_save = $row['user_password']; 
+    $pass_save = $row['user_password'];
     if (password_verify($pass, $pass_save)) {
-        $sql = "DELETE FROM users_online WHERE username='$user'";
-        if (!mysqli_query($conn, $sql)) {
+        $token = generateAuthToken($username);
+        if (empty($token)) {
             return false;
         }
-        // $sql = "DELETE FROM users_online WHERE username='$user'";
+        setcookie("token", $token, time() + (86400 * 7), '/');
         return true;
     }
-
-    // B4. Dong ket noi
-    mysqli_close($conn);
     return false;
 }
-function generateAuthToken()
+function generateAuthToken($username)
 {
-}
-function authorized()
-{
-    session_start();
+    if (!$username) {
+        return "";
+    }
+    require("constant.php");
     $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
+    $sql = "DELETE FROM users_online WHERE username='$username'";
+    if (!mysqli_query($conn, $sql)) {
+        return false;
+    }
+    $issuedAt = new DateTimeImmutable();
+    $expired = $issuedAt->modify('+7 days')->getTimestamp();      
+    $serverName = "localhost";
+    $data = [
+        'iat'  => $issuedAt->getTimestamp(),
+        'iss'  => $serverName,
+        'nbf'  => $issuedAt->getTimestamp(),
+        'exp'  => $expired,
+        'userName' => $username,
+    ];
+    $token = JWT::encode(
+        $data,
+        $secretKey,
+        'HS512'
+    );
+    $sql = "INSERT INTO users_online(token, expired, username) VALUES ('$token', '$expired', '$username')";
+    if (!mysqli_query($conn, $sql)) {
+        mysqli_close($conn);
+        return false;
+    }
+    mysqli_close($conn);
+    return $token;
+}
+function authorized()
+{
+    session_start();
+    require("constant.php");
+    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    if (!isset($_COOKIE["token"])) {
+        logout();
+        exit();
+    }
     $token = $_COOKIE["token"];
-    if (empty($token)) {
-        header("location:/baitaplon/auth/login.php");
-        exit(1);
+    $userName = isTokenValid($token);
+    if(!$userName){
+        logout();
+        exit();
     }
-    $sql = "SELECT * FROM users_online WHERE token='$token'";
-    $result = mysqli_query($conn, $sql);
-    if (mysqli_num_rows($result) === 0) {
-        header("location:/baitaplon/auth/login.php");
-        exit(1);
-    }
-    $row = mysqli_fetch_assoc($result);
-    $userName = $row['username'];
-
     //get userinfo
     $sql = "SELECT * FROM users WHERE username='$userName'";
     $result = mysqli_query($conn, $sql);
     if (mysqli_num_rows($result) === 0) {
-        header("location:/baitaplon/auth/login.php");
+        logout();
         exit(1);
     }
-
     $row = mysqli_fetch_assoc($result);
     $_SESSION["user_id"] = $row['user_id'];
     $_SESSION["username"] = $row['username'];
@@ -218,9 +290,10 @@ function authorized()
     $_SESSION["user_email"] = $row['user_email'];
     $_SESSION["user_role"] = $row['user_role'];
 }
+
 function handleRoute()
 {
-    require_once("constant.php");
+    require("constant.php");
     if (isPrivateRoute()) {
         if (!isset($_SESSION["username"])) {
             header("location:" . $route["auth"]);
@@ -231,11 +304,8 @@ function handleRoute()
         if ($userRole == "admin" && !str_contains($url, "admin") && !str_contains($url, "public")) {
             header("location:" . $route["admin"]);
         }
-        if ($userRole == "recruiter" && !str_contains($url, "recruitment") && !str_contains($url, "public")) {
-            header("location:" . $route["recruitment"]);
-        }
         if ($userRole == "user" && !str_contains($url, "user") && !str_contains($url, "public")) {
-            header("location:" . $route["recruitment"]);
+            header("location:" . $route["user"]);
         }
     }
     if (isAuthRoute()) {
@@ -244,9 +314,6 @@ function handleRoute()
             switch ($userRole) {
                 case 'admin':
                     header("location:" . $route["admin"]);
-                    break;
-                case 'recruiter':
-                    header("location:" . $route["recruitment"]);
                     break;
                 case 'user':
                     header("location:" . $route["user"]);
@@ -260,7 +327,7 @@ function handleRoute()
 function isPrivateRoute()
 {
     $url = $_SERVER['REQUEST_URI'];
-    if (str_contains($url, "admin") || str_contains($url, "user") || str_contains($url, "recruitment")) {
+    if (str_contains($url, "admin") || str_contains($url, "user")) {
         return true;
     }
     return false;
@@ -272,7 +339,17 @@ function isAuthRoute()
 }
 function logout()
 {
-    require_once("constant.php");
+    require("constant.php");
+    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    if (isset($_SESSION["username"])){
+        $username = $_SESSION["username"];
+        $sql = "DELETE * FROM users_online WHERE username='$username'";
+        mysqli_query($conn, $sql);
+    }
+    mysqli_close($conn);
     header_remove();
     session_destroy();
     header("location:" . $route["auth"]);
