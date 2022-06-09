@@ -1,5 +1,5 @@
 <?php
-include('../functions.php');
+include '../constant.php';
 handleRoute();
 ?>
 <!DOCTYPE html>
@@ -29,162 +29,134 @@ handleRoute();
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Navbar</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Dropdown
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" href="#">Action</a></li>
-              <li><a class="dropdown-item" href="#">Another action</a></li>
-              <li>
-                <hr class="dropdown-divider">
-              </li>
-              <li><a class="dropdown-item" href="#">Something else here</a></li>
-            </ul>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-          </li>
-        </ul>
-        <form class="d-flex">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Search</button>
-        </form>
-      </div>
-    </div>
-  </nav>
+  <section class="vh-100" style="background-color: #508bfc;overflow: hidden;">
+    <form novalidate method="POST" action="./register.php" class="container-xs py-5 h-100 needs-validation <?php if (isset($_POST['btnRegister'])) {
+                                                                                                              echo "was-validated";
+                                                                                                            }
+                                                                                                            ?>">
+      <?php
+      $errors = array();
+      if (isset($_POST['btnRegister'])) {
+        if (empty($_POST['txtFirstName'])) {
+          $errors["txtFirstName"] = $errorsMessage["empty"];
+        }
+        if (empty($_POST['txtLastName'])) {
+          $errors["txtLastName"] = $errorsMessage["empty"];
+        }
+        if (empty($_POST['txtUser'])) {
+          $errors["txtUser"] = $errorsMessage["empty"];
+        }
+        if (empty($_POST['txtEmail'])) {
+          $errors["txtEmail"] = $errorsMessage["empty"];
+        }
+        if (empty($_POST['txtPass1'])) {
+          $errors["txtPass1"] = $errorsMessage["empty"];
+        }
+        if (empty($_POST['txtPass2'])) {
+          $errors["txtPass2"] = $errorsMessage["empty"];
+        }
+        if ($_POST['txtPass2'] != $_POST['txtPass1']) {
+          $errors["txtPass2"] = $errorsMessage["invalid"];
+        }
+        $isValid = count($errors) == 0;
+        if ($isValid) {
+          // Thực hiện Xử lý lưu bản ghi
+          // 1. Lấy thông tin từ FORM
+          $firstName = $_POST['txtFirstName'];
+          $lastName = $_POST['txtLastName'];
+          $userName = $_POST['txtUser'];
+          $email = $_POST['txtEmail'];
+          $pass = $_POST['txtPass1'];
 
-  <section id="register" class="container">
-    <h2 class="text-center">Register</h2>
-    <?php
-    $errors = new stdClass;
-    $successMessage = "";
-    $errorMessage = "";
-
-    if (isset($_POST['btnRegister'])) {
-      require_once('../constant.php');
-      if (empty($_POST['txtFirstName'])) {
-        $errors["txtFirstName"] = $errorsMessage["empty"];
-      }
-
-      if (empty($_POST['txtLastName'])) {
-        $errors["txtLastName"] = $errorsMessage["empty"];
-      }
-      if (empty($_POST['txtUser'])) {
-        $errors["txtUser"] = $errorsMessage["empty"];
-      }
-      if (empty($_POST['txtEmail'])) {
-        $errors["txtEmail"] = $errorsMessage["empty"];
-      }
-      if (empty($_POST['txtPass1'])) {
-        $errors["txtPass1"] = $errorsMessage["empty"];
-      }
-      if ($_POST['txtPass2'] != $_POST['txtPass1']) {
-        $errors["txtPass2"] = $errorsMessage["invalid"];
-      }
-      $isValid = count(get_object_vars($errors)) === 0;
-      if ($isValid) {
-        // Thực hiện Xử lý lưu bản ghi
-        // 1. Lấy thông tin từ FORM
-        $firstName  = $_POST['txtFirstName'];
-        $lastName   = $_POST['txtLastName'];
-        $userName   = $_POST['txtUser'];
-        $email      = $_POST['txtEmail'];
-        $pass       = $_POST['txtPass1'];
-
-        // 2. Ra lệnh kiểm tra
-        require_once("functions.php");
-        if (checkUserExist($userName, $email)) {
-          $errorMessage .= "Username or Email existed";
-        } else {
-          if (addNewUser($firstName, $lastName, $userName, $email, $avatar, $pass)) {
-            // Xử lý chức năng GỬI EMAIL
-            $successMessage .= "Bạn đã đăng kí thành công tài khoản. Chúng tôi sẽ gửi thông báo tới Email của Bạn";
+          // 2. Ra lệnh kiểm tra
+          if (checkUserExist($userName, $email)) {
+            header("location:" . $_SERVER['REQUEST_URI'] . '?error=Username or Email existed.');
+          } else {
+            if (addNewUser($firstName, $lastName, $userName, $email, $pass)) {
+              // Xử lý chức năng GỬI EMAIL
+              $token = generateAuthToken($userName);
+              if (empty($token)) {
+                removeUser($userName);
+                return false;
+              }
+              if (!sendEmailForActivation($email, $token)) {
+                removeUser($userName);
+                header("location:" . $_SERVER['REQUEST_URI'] . '?error=Server error');
+                return;
+              }
+              header("location:" . $_SERVER['REQUEST_URI'] . '?success=Sign up success. Please check email for verify account.');
+              return;
+            }
+            header("location:" . $_SERVER['REQUEST_URI'] . '?error=Server error');
           }
         }
       }
-    }
-
-    ?>
-    <form method="POST" action="./register.php">
-      <div class="mb-3">
-        <input type="text" class="form-control" id="txtFirstName" name="txtFirstName" placeholder="First Name">
-        <?php
-        if (!isset($errors["txtFirstName"])) echo `<div class="invalid-feedback">
-          ${$errors["txtFirstName"]}
-        </div>`;
-        ?>
+      ?>
+      <div class="row d-flex justify-content-center align-items-center h-100">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+          <div class="card shadow-2-strong" style="border-radius: 1rem;">
+            <div class="card-body p-5 text-center">
+              <h3 class="mb-5">Login</h3>
+              <div class="form-outline mb-4 ">
+                <label class="form-label float-start" for="typeEmailX-2">First name</label>
+                <input autocomplete type="text" class="form-control" value="<?php if (!empty($_POST['txtFirstName'])) echo $_POST['txtFirstName'] ?>" id="txtFirstName" name="txtFirstName" placeholder="First Name" required>
+                <?php
+                if (isset($errors["txtFirstName"])) echo '<div class="invalid-feedback text-start">' . $errors["txtFirstName"] . '</div>';
+                ?>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label float-start" for="typePasswordX-2">Last name</label>
+                <input autocomplete type="text" class="form-control" value="<?php if (!empty($_POST['txtLastName'])) echo $_POST['txtLastName'] ?>" id="txtLastName" name="txtLastName" placeholder="Last Name" required>
+                <?php
+                if (isset($errors["txtLastName"])) echo '<div class="invalid-feedback text-start">' . $errors["txtLastName"] . '</div>';
+                ?>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label float-start" for="typePasswordX-2">Username</label>
+                <input autocomplete type="text" class="form-control" value="<?php if (!empty($_POST['txtUser'])) echo $_POST['txtUser'] ?>" id="txtUser" name="txtUser" placeholder="Username" required>
+                <?php
+                if (isset($errors["txtUser"])) echo '<div class="invalid-feedback text-start">' . $errors["txtUser"] . '</div>';
+                ?>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label float-start" for="typePasswordX-2">Email</label>
+                <input autocomplete type="email" class="form-control" value="<?php if (!empty($_POST['txtEmail'])) echo $_POST['txtEmail'] ?>" id="txtEmail" name="txtEmail" placeholder="Email" required>
+                <?php
+                if (isset($errors["txtEmail"])) echo '<div class="invalid-feedback text-start">' . $errors["txtEmail"] . '</div>';
+                ?>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label float-start" for="typePasswordX-2">Password</label>
+                <input autocomplete type="password" class="form-control" value="<?php if (!empty($_POST['txtPass1'])) echo $_POST['txtPass1'] ?>" id="txtPass1" name="txtPass1" placeholder="Password" required>
+                <?php
+                if (isset($errors["txtPass1"])) echo '<div class="invalid-feedback text-start">' . $errors["txtPass1"] . '</div>';
+                ?>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label float-start" for="typePasswordX-2">Retype Password</label>
+                <input autocomplete type="password" class="form-control" value="<?php if (!empty($_POST['txtPass2']) && !isset($errors["txtPass2"])) echo $_POST['txtPass2'] ?>" id="txtPass2" name="txtPass2" placeholder="Retype Password" required>
+                <?php
+                if (isset($errors["txtPass2"])) echo '<div class="invalid-feedback text-start">' . $errors["txtPass2"] . '</div>';
+                ?>
+              </div>
+              <div class="text-end pb-4 fw-bold"><a href="./login.php" class="link-primary">Already have an account?</a></div>
+              <button class="w-100 btn btn-primary btn-lg btn-block" id="btnRegister" name="btnRegister" type="submit">Register</button>
+            </div>
+            <div class="p-2 pb-0 pt-0">
+              <?php
+              if (isset($_GET['error'])) {
+                echo '<div class="alert alert-danger" role="alert">' . $_GET['error'] . '</div>';
+              }
+              if (isset($_GET['success'])) {
+                echo '<div class="alert alert-success" role="alert">' . $_GET['success'] . '</div>';
+              }
+              ?>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="mb-3">
-        <input type="text" class="form-control" id="txtLastName" name="txtLastName" placeholder="Last Name">
-        <?php
-        if (!isset($errors["txtLastName"])) echo `<div class="invalid-feedback">
-          ${$errors["txtLastName"]}
-        </div>`;
-        ?>
-      </div>
-      <div class="mb-3">
-        <input type="text" class="form-control" id="txtUser" name="txtUser" placeholder="Username">
-        <?php
-        if (!isset($errors["txtUser"])) echo `<div class="invalid-feedback">
-          ${$errors["txtUser"]}
-        </div>`;
-        ?>
-      </div>
-      <div class="mb-3">
-        <input type="email" class="form-control" id="txtEmail" name="txtEmail" placeholder="Email">
-        <?php
-        if (!isset($errors["txtEmail"])) echo `<div class="invalid-feedback">
-          ${$errors["txtEmail"]}
-        </div>`;
-        ?>
-      </div>
-      <div class="mb-3">
-        <input type="password" class="form-control" id="txtPass1" name="txtPass1" placeholder="Password">
-        <?php
-        if (!isset($errors["txtPass1"])) echo `<div class="invalid-feedback">
-          ${$errors["txtPass1"]}
-        </div>`;
-        ?>
-      </div>
-      <div class="mb-3">
-        <input type="password" class="form-control" id="txtPass2" name="txtPass2" placeholder="Retype Password">
-        <?php
-        if (!isset($errors["txtPass2"])) echo `<div class="invalid-feedback">
-          ${$errors["txtPass2"]}
-        </div>`;
-        ?>
-      </div>
-      <button type="submit" class="btn btn-primary" name="btnRegister">Register</button>
     </form>
-    <?php
-    if (!empty($successMessage)) {
-      echo `<div class="alert alert-danger" role="alert">
-       ${successMessage}
-      </div>`;
-    }
-    if (!empty($errorMessage)) {
-      echo `<div class="alert alert-danger" role="alert">
-       ${errorMessage}
-      </div>`;
-    }
-    ?>
   </section>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
 

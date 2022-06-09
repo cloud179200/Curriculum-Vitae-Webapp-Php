@@ -38,8 +38,6 @@
    <?php
     require('../constant.php');
     $errors = array();
-    $errorMessage = isset($_GET['error']) ? $_GET['error'] : "";
-    $successMessage = isset($_GET['success']) ? $_GET['success'] : "";
     if (isset($_POST['btnLogin'])) {
       if (empty($_POST['txtUser'])) {
         $errors["txtUser"] = $errorsMessage["empty"];
@@ -53,9 +51,9 @@
         $user = $_POST['txtUser'];
         $pass = $_POST['txtPass'];
         if (checkLogin($user, $pass)) {
-          header("location:" . $_SERVER['REQUEST_URI'] . '?success=ngon qua em');
+          header("location:" . $route["user"]);
         } else {
-          header("location:" . $_SERVER['REQUEST_URI'] . '?error=co cai buoi');
+          header("location:" . $_SERVER['REQUEST_URI'] . '?error=Login failed');
         }
       }
     }
@@ -69,7 +67,7 @@
                <h3 class="mb-5">Login</h3>
                <div class="form-outline mb-4 ">
                  <label class="form-label float-start" for="typeEmailX-2">Username</label>
-                 <input type="text" id="txtUser" name="txtUser" class="form-control form-control-lg" required />
+                 <input autocomplete type="text" id="txtUser" name="txtUser" class="form-control form-control-lg" required />
                  <?php
                   if (isset($errors["txtUser"])) echo '<div class="invalid-feedback text-start">' . $errors["txtUser"] . '</div>';
                   ?>
@@ -77,20 +75,21 @@
 
                <div class="form-outline mb-4">
                  <label class="form-label float-start" for="typePasswordX-2">Password</label>
-                 <input type="password" id="txtPass" name="txtPass" class="form-control form-control-lg" required />
+                 <input autocomplete type="password" id="txtPass" name="txtPass" class="form-control form-control-lg" required />
                  <?php
                   if (isset($errors["txtPass"])) echo '<div class="invalid-feedback text-start">' . $errors["txtPass"] . '</div>';
                   ?>
                </div>
-               <button class="btn btn-primary btn-lg btn-block" id="btnLogin" name="btnLogin" type="submit">Login</button>
+               <div class="text-end pb-4 fw-bold"><a href="./register.php" class="link-primary">Don't have account?</a></div>
+               <button class="w-100 btn btn-primary btn-lg btn-block" id="btnLogin" name="btnLogin" type="submit">Login</button>
              </div>
              <div class="p-2 pb-0 pt-0">
                <?php
-                if (!empty($errorMessage)) {
-                  echo '<div class="alert alert-danger" role="alert">' . $errorMessage . '</div>';
+                if (isset($_GET['error'])) {
+                  echo '<div class="alert alert-danger" role="alert">' . $_GET['error'] . '</div>';
                 }
-                if (!empty($successMessage)) {
-                  echo '<div class="alert alert-success" role="alert">' . $successMessage . '</div>';
+                if (isset($_GET['success'])) {
+                  echo '<div class="alert alert-success" role="alert">' . $_GET['success'] . '</div>';
                 }
                 ?>
              </div>
@@ -98,7 +97,6 @@
          </div>
        </div>
      </form>
-
    </section>
    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
  </body>
