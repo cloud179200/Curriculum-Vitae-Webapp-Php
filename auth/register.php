@@ -1,5 +1,6 @@
 <?php
-include '../constant.php';
+include('../functions.php');
+include('../constant.php');
 handleRoute();
 ?>
 <!DOCTYPE html>

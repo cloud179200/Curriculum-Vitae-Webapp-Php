@@ -1,6 +1,7 @@
  <?php
   include('../functions.php');
-  handleRoute()
+  include('../constant.php');
+  handleRoute();
   ?>
  <!DOCTYPE html>
  <html lang="en">
@@ -36,7 +37,6 @@
 
  <body>
    <?php
-    require('../constant.php');
     $errors = array();
     if (isset($_POST['btnLogin'])) {
       if (empty($_POST['txtUser'])) {
