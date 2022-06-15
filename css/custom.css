@@ -1,0 +1,74 @@
+.custom-linear-gradient-background-container {
+  background: rgb(0, 255, 98);
+  background: radial-gradient(
+    circle,
+    rgba(0, 255, 98, 1) 24%,
+    rgba(59, 167, 105, 1) 85%
+  );
+  min-height: 100vh;
+}
+.custom-nav-tabs {
+  border-bottom: none;
+}
+.custom-nav-link {
+  color: black;
+  background-color: white !important;
+  border: 3px solid white !important;
+  transition: all 0.3s;
+}
+.custom-nav-link:hover {
+  color: #3ba769;
+}
+.custom-nav-link.active {
+  background-color: #3ba769 !important;
+  border: 3px solid black !important;
+}
+.custom-label-can-input {
+  cursor: pointer;
+}
+.form-control:focus {
+  border-color: #27ae60;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 253, 33, 0.25);
+}
+.form-check-input {
+  height: 1.5rem;
+  width: 3rem !important;
+  margin-right: 1.5rem;
+}
+.form-check-input:focus {
+  background-color: #27ae60;
+  border-color: #27ae60;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 253, 33, 0.25);
+}
+.form-check-input:checked {
+  background-color: #27ae60;
+  border-color: #27ae60;
+}
+.toast-container {
+  z-index: 1200;
+}
+
+.col-form-label > p {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 15rem;
+  height: 1.5rem;
+  margin: 0;
+}
+
+.custom-editor-area {
+  cursor: pointer;
+  background-color: #ecf0f1;
+  min-height: 15vh;
+  transition: all 0.2s;
+}
+.custom-editor-area:hover {
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+.custom-editor-area:hover:focus {
+  background-color: #ecf0f1;
+}

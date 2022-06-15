@@ -6,77 +6,138 @@ use PHPMailer\PHPMailer\Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
-require "C:\\xampp\\htdocs\\baitaplon\\vendor\\autoload.php";
 
-// function getAllPosts(){
-//     // B1. Ket noi CSDL
-//     $conn = mysqli_connect('localhost','root','','baitaplon');
-//     if(!$conn){
-//         die("Ko the ket noi");
-//     }
-//     // B2. Truy van
-//     $sql = "SELECT * FROM posts";
-//     $result = mysqli_query($conn,$sql);
-
-//     // B3. Xu ly ket qua
-//     $posts = array();
-//     while($row = mysqli_fetch_assoc($result)){
-//         array_push($posts, $row);
-//     }
-
-//     // B4. Dong ket noi
-//     mysqli_close($conn);
-//     return $posts;
-// }
-
-// function getAllCategories(){
-//     // B1. Ket noi CSDL
-//     $conn = mysqli_connect('localhost','root','','baitaplon');
-//     if(!$conn){
-//         die("Ko the ket noi");
-//     }
-//     // B2. Truy van
-//     $sql = "SELECT * FROM categories";
-//     $result = mysqli_query($conn,$sql);
-
-//     // B3. Xu ly ket qua
-//     $categories = array();
-//     while($row = mysqli_fetch_assoc($result)){
-//         array_push($categories,$row);
-//     }
-
-//     // B4. Dong ket noi
-//     mysqli_close($conn);
-//     return $categories;
-// }
-
-// function getPostById($id){
-//     // B1. Ket noi CSDL
-//     $conn = mysqli_connect('localhost','root','','baitaplon');
-//     if(!$conn){
-//         die("Ko the ket noi");
-//     }
-//     // B2. Truy van
-//     $sql = "SELECT * FROM posts WHERE post_id='$id'";
-//     $result = mysqli_query($conn,$sql);
-
-//     // B3. Xu ly ket qua
-//     $post = mysqli_fetch_assoc($result);
-
-//     // B4. Dong ket noi
-//     mysqli_close($conn);
-//     return $post;
-// }
-
-function isTokenValid($token){
+include("C:\\xampp\\htdocs\\baitaplon\\vendor\\autoload.php");
+function getContacts($token)
+{
+    $contacts = array();
+    $username = isTokenValid($token);
+    if (!$username) {
+        return $contacts;
+    }
     require("constant.php");
-    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
     if (!$conn) {
         die("Ko the ket noi");
     }
-    try{
+    $sql = "SELECT * FROM cv_information WHERE username='$username' LIMIT 1";
+    $result = mysqli_query($conn, $sql);
+    if ($result === 0 || !is_a($result, 'mysqli_result')) {
+        return $contacts;
+    }
+    $cv_id = mysqli_fetch_assoc($result)["cv_id"];
+    $sql = "SELECT * FROM contact WHERE cv_id='$cv_id'";
+    $result = mysqli_query($conn, $sql);
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        array_push($contacts, $row);
+    }
+
+    mysqli_close($conn);
+    return $contacts;
+}
+function getCVInfoPublic()
+{
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+
+    $sql = "SELECT * FROM cv_information WHERE status='1'";
+    $result = mysqli_query($conn, $sql);
+
+    $infos = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        array_push($infos, $row);
+    }
+
+    mysqli_close($conn);
+    return $infos;
+}
+function getCVInfoPersonal($token){
+    $contacts = array();
+    $username = isTokenValid($token);
+    if (!$username) {
+        return $contacts;
+    }
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    $sql = "SELECT * FROM cv_information WHERE username='$username' LIMIT 1";
+    $result = mysqli_query($conn, $sql);
+    if ($result === 0 || !is_a($result, 'mysqli_result')) {
+        return $contacts;
+    }
+    $cvInfo = mysqli_fetch_assoc($result);
+    return $cvInfo;
+}
+function getCVInfoById($id)
+{
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+
+    $sql = "SELECT * FROM cv_information WHERE cv_id='$id' and status=TRUE";
+    $result = mysqli_query($conn, $sql);
+    $info = mysqli_fetch_assoc($result);
+    mysqli_close($conn);
+    return $info;
+}
+
+function addCVInfo($token, $name, $date_of_birth, $address, $phone, $detail, $status, $desired_job)
+{
+    $username = isTokenValid($token);
+    if (!$username) {
+        return false;
+    }
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    $sql = "INSERT INTO cv_information(username,name,date_of_birth,address,phone,detail, status, desired_job)
+    VALUES ('$username', '$name', '$date_of_birth', '$address', '$phone', '$detail', '$status', '$desired_job')";
+    $result = mysqli_query($conn, $sql);
+    if (!$result) {
+        return false;
+    }
+    return true;
+}
+function updateCVInfo($token, $cv_id, $name, $date_of_birth, $address, $phone, $detail, $status)
+{
+    $username = isTokenValid($token);
+    if (!$username) {
+        return false;
+    }
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    $sql = "UPDATE cv_information 
+    SET name='$name',date_of_birth='$date_of_birth',address='$address',phone='$phone',detail='$detail', status='$status'
+    WHERE cv_id='$cv_id'";
+    if (!mysqli_query($conn, $sql)) {
+        return false;
+    }
+    return true;
+}
+
+function isTokenValid($token)
+{
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    try {
         $jwtDecode = JWT::decode($token, new Key($secretKey, 'HS512'));
-        if(!property_exists($jwtDecode, "userName")){
+        if (!property_exists($jwtDecode, "userName")) {
             $sql = "DELETE FROM users_online WHERE token='.$token.'";
             mysqli_query($conn, $sql);
             return false;
@@ -89,7 +150,7 @@ function isTokenValid($token){
             return false;
         }
         return $userName;
-    }catch(ExpiredException $e){
+    } catch (ExpiredException $e) {
         $sql = "DELETE FROM users_online WHERE token='.$token.'";
         mysqli_query($conn, $sql);
         return false;
@@ -98,8 +159,9 @@ function isTokenValid($token){
 
 function checkUserExist($userName, $email)
 {
-    // B1. Ket noi CSDL
-    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    // $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
@@ -116,19 +178,60 @@ function checkUserExist($userName, $email)
 
     return false;
 }
-
-
-function addNewUser($fistName, $lastName, $userName, $email, $pass)
+function addContact($cv_id, $contact_name, $phone, $email){
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    $cvInfo = getCVInfoById($cv_id);
+    if(!$cvInfo){
+        return false;
+    }
+    $sql = "INSERT INTO contact(cv_id, contact_name, phone, email) VALUES ('$cv_id', '$contact_name', '$phone', '$email')";
+    if(!mysqli_query($conn, $sql)){
+        mysqli_close($conn);
+        return false;
+    }
+    mysqli_close($conn);
+    return true;
+}
+function removeContact($contact_id, $token){
+    $username = isTokenValid($token);
+    if (!$username) {
+        return false;
+    }
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    if (!$conn) {
+        die("Ko the ket noi");
+    }
+    $cvInfo = getCVInfoPersonal($token);
+    if(!$cvInfo){
+        return true;
+    }
+    $cv_id = $cvInfo["cv_id"];
+    $sql = "DELETE from contact where cv_id='$cv_id' AND contact_id='$contact_id'";
+    if(!mysqli_query($conn, $sql)){
+        mysqli_close($conn);
+        return false;
+    }
+    mysqli_close($conn);
+    return true;
+}
+function addNewUser($firstName, $lastName, $userName, $email, $pass)
 {
-    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    //$conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
     $pass_hash = password_hash($pass, PASSWORD_DEFAULT);
     $sql = "INSERT INTO users (user_firstname, user_lastname, username, user_email, user_password, user_role, verified)
-          VALUES ('$fistName', '$lastName', '$userName', '$email', '$pass_hash', 'user', 'FALSE')";
+          VALUES ('$firstName', '$lastName', '$userName', '$email', '$pass_hash', 'user', 'FALSE')";
     $n = mysqli_query($conn, $sql);
-    
+
     if ($n > 0) {
         return true;
     }
@@ -137,12 +240,13 @@ function addNewUser($fistName, $lastName, $userName, $email, $pass)
 function verifyUser($token)
 {
     require("constant.php");
-    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    //$conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
     $username = isTokenValid($token);
-    if(!$username){
+    if (!$username) {
         return false;
     }
     $sql = "UPDATE users SET verified=TRUE WHERE username='$username'";
@@ -174,7 +278,7 @@ function sendEmailForActivation($toEmail, $verifyToken)
         $mail->AddCC($toEmail, $toEmail);
         $mail->Subject = 'Verify your web CV account';
         $link = $host . $route["default"] . "/verify.php?token=" . $verifyToken;
-        $mail->msgHTML('<a href="'.$link.'">Verify link</a>');
+        $mail->msgHTML('<a href="' . $link . '">Verify link</a>');
         if (!$mail->send()) {
             var_dump($mail);
             return false;
@@ -187,7 +291,9 @@ function sendEmailForActivation($toEmail, $verifyToken)
 }
 function removeUser($username)
 {
-    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    //$conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
@@ -195,11 +301,15 @@ function removeUser($username)
     mysqli_query($conn, $sql);
     $sql = "DELETE FROM users WHERE username='$username'";
     mysqli_query($conn, $sql);
+    $sql = "DELETE FROM cv_information WHERE username='$username'";
+    mysqli_query($conn, $sql);
     mysqli_close($conn);
 }
 function checkLogin($username, $pass)
 {
-    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    require("constant.php");
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    //$conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
@@ -226,7 +336,8 @@ function generateAuthToken($username)
         return "";
     }
     require("constant.php");
-    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    //$conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
@@ -235,7 +346,7 @@ function generateAuthToken($username)
         return false;
     }
     $issuedAt = new DateTimeImmutable();
-    $expired = $issuedAt->modify('+7 days')->getTimestamp();      
+    $expired = $issuedAt->modify('+7 days')->getTimestamp();
     $serverName = "localhost";
     $data = [
         'iat'  => $issuedAt->getTimestamp(),
@@ -261,7 +372,8 @@ function authorized()
 {
     session_start();
     require("constant.php");
-    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    //$conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
@@ -271,7 +383,7 @@ function authorized()
     }
     $token = $_COOKIE["token"];
     $userName = isTokenValid($token);
-    if(!$userName){
+    if (!$userName) {
         logout();
         exit();
     }
@@ -337,14 +449,15 @@ function isAuthRoute()
     $url = $_SERVER['REQUEST_URI'];
     return str_contains($url, "auth");
 }
-function logout()
+function logout($isVerifySuccess = false)
 {
     require("constant.php");
-    $conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    //$conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
     if (!$conn) {
         die("Ko the ket noi");
     }
-    if (isset($_SESSION["username"])){
+    if (isset($_SESSION["username"])) {
         $username = $_SESSION["username"];
         $sql = "DELETE * FROM users_online WHERE username='$username'";
         mysqli_query($conn, $sql);
@@ -352,5 +465,5 @@ function logout()
     mysqli_close($conn);
     header_remove();
     session_destroy();
-    header("location:" . $route["auth"]);
+    header("location:" . $route["auth"].($isVerifySuccess ? "/login.php?success=Verify account success. You can login now ^.^": ""));
 }

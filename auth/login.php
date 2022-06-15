@@ -1,6 +1,7 @@
  <?php
   include('../functions.php');
   include('../constant.php');
+  session_start();
   handleRoute();
   ?>
  <!DOCTYPE html>
@@ -33,71 +34,101 @@
 
    <!-- Template Stylesheet -->
    <link href="../css/style.css" rel="stylesheet">
+   <link href="../css/custom.css" rel="stylesheet">
+
  </head>
 
- <body>
-   <?php
-    $errors = array();
-    if (isset($_POST['btnLogin'])) {
-      if (empty($_POST['txtUser'])) {
-        $errors["txtUser"] = $errorsMessage["empty"];
-      }
+ <body class="overflow-hidden">
+   <div class="row vh-100 overflow-hidden">
+     <div class="col-6 p-0">
+       <?php
+        $errors = array();
+        if (isset($_POST['btnLogin'])) {
+          if (empty($_POST['txtUser'])) {
+            $errors["txtUser"] = $errorsMessage["empty"];
+          }
 
-      if (empty($_POST['txtPass'])) {
-        $errors["txtPass"] = $errorsMessage["empty"];
-      }
-      $isValid = count($errors) == 0;
-      if ($isValid) {
-        $user = $_POST['txtUser'];
-        $pass = $_POST['txtPass'];
-        if (checkLogin($user, $pass)) {
-          header("location:" . $route["user"]);
-        } else {
-          header("location:" . $_SERVER['REQUEST_URI'] . '?error=Login failed');
+          if (empty($_POST['txtPass'])) {
+            $errors["txtPass"] = $errorsMessage["empty"];
+          }
+          $isValid = count($errors) == 0;
+          if ($isValid) {
+            $user = $_POST['txtUser'];
+            $pass = $_POST['txtPass'];
+            if (checkLogin($user, $pass)) {
+              header("location:" . $route["user"]);
+            } else {
+              header("location:" . $_SERVER['REQUEST_URI'] . '?error=Login failed');
+            }
+          }
         }
-      }
-    }
-    ?>
-   <section class="vh-100" style="background-color: #508bfc;">
-     <form novalidate method="POST" action="./login.php" class="container py-5 h-100 needs-validation <?php if (isset($_POST['btnLogin'])) echo "was-validated" ?>">
-       <div class="row d-flex justify-content-center align-items-center h-100">
-         <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-           <div class="card shadow-2-strong" style="border-radius: 1rem;">
-             <div class="card-body p-5 text-center">
-               <h3 class="mb-5">Login</h3>
-               <div class="form-outline mb-4 ">
-                 <label class="form-label float-start" for="typeEmailX-2">Username</label>
-                 <input autocomplete type="text" id="txtUser" name="txtUser" class="form-control form-control-lg" required />
-                 <?php
-                  if (isset($errors["txtUser"])) echo '<div class="invalid-feedback text-start">' . $errors["txtUser"] . '</div>';
-                  ?>
-               </div>
+        ?>
+       <section class="vh-100" style="background-color: #eee;">
+         <form novalidate method="POST" action="./login.php" class="container py-5 h-100 needs-validation <?php if (isset($_POST['btnLogin'])) echo "was-validated" ?>">
+           <div class="row d-flex justify-content-center align-items-center h-100">
+             <div class="col-12 col-md-9 col-lg-9 col-xl-9">
+               <div class="card shadow-2-strong" style="border-radius: 1rem;">
+                 <div class="card-body p-5 text-center">
+                   <h3 class="mb-5">Login</h3>
+                   <div class="form-outline mb-4 ">
+                     <label class="form-label float-start" for="typeEmailX-2">Username</label>
+                     <input autocomplete type="text" id="txtUser" name="txtUser" class="form-control form-control-lg" required />
+                     <?php
+                      if (isset($errors["txtUser"])) echo '<div class="invalid-feedback text-start">' . $errors["txtUser"] . '</div>';
+                      ?>
+                   </div>
 
-               <div class="form-outline mb-4">
-                 <label class="form-label float-start" for="typePasswordX-2">Password</label>
-                 <input autocomplete type="password" id="txtPass" name="txtPass" class="form-control form-control-lg" required />
-                 <?php
-                  if (isset($errors["txtPass"])) echo '<div class="invalid-feedback text-start">' . $errors["txtPass"] . '</div>';
-                  ?>
+                   <div class="form-outline mb-4">
+                     <label class="form-label float-start" for="typePasswordX-2">Password</label>
+                     <input autocomplete type="password" id="txtPass" name="txtPass" class="form-control form-control-lg" required />
+                     <?php
+                      if (isset($errors["txtPass"])) echo '<div class="invalid-feedback text-start">' . $errors["txtPass"] . '</div>';
+                      ?>
+                   </div>
+                   <div class="text-end pb-4 fw-bold"><a href="./register.php" class="link-success">Don't have account?</a></div>
+                   <button class="w-100 btn btn-success btn-lg btn-block" id="btnLogin" name="btnLogin" type="submit">Login</button>
+                 </div>
+                 <div class="p-2 pb-0 pt-0">
+                   <?php
+                    if (isset($_GET['error'])) {
+                      echo '<div class="alert alert-danger" role="alert">' . $_GET['error'] . '</div>';
+                    }
+                    if (isset($_GET['success'])) {
+                      echo '<div class="alert alert-success" role="alert">' . $_GET['success'] . '</div>';
+                    }
+                    ?>
+                 </div>
                </div>
-               <div class="text-end pb-4 fw-bold"><a href="./register.php" class="link-primary">Don't have account?</a></div>
-               <button class="w-100 btn btn-primary btn-lg btn-block" id="btnLogin" name="btnLogin" type="submit">Login</button>
-             </div>
-             <div class="p-2 pb-0 pt-0">
-               <?php
-                if (isset($_GET['error'])) {
-                  echo '<div class="alert alert-danger" role="alert">' . $_GET['error'] . '</div>';
-                }
-                if (isset($_GET['success'])) {
-                  echo '<div class="alert alert-success" role="alert">' . $_GET['success'] . '</div>';
-                }
-                ?>
              </div>
            </div>
+         </form>
+       </section>
+     </div>
+     <div class="col-6 p-0">
+       <div id="carouselExampleInterval" class="carousel slide" data-bs-ride="carousel">
+         <div class="carousel-inner">
+           <div class="carousel-item active">
+             <img src="https://i.pinimg.com/564x/a2/fb/88/a2fb885e01b718dae990fbd1e0c4a951.jpg" class="d-block w-100" alt="...">
+           </div>
+           <div class="carousel-item">
+             <img src="https://i.pinimg.com/564x/35/87/76/358776636bf497df41e51245cfc56598.jpg" class="d-block w-100" alt="...">
+           </div>
+           <div class="carousel-item">
+             <img src="https://i.pinimg.com/564x/08/39/5f/08395f1413bf28ccc7e1c81f282b9187.jpg" class="d-block w-100" alt="...">
+           </div>
          </div>
+         <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleInterval" data-bs-slide="prev">
+           <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+           <span class="visually-hidden">Previous</span>
+         </button>
+         <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleInterval" data-bs-slide="next">
+           <span class="carousel-control-next-icon" aria-hidden="true"></span>
+           <span class="visually-hidden">Next</span>
+         </button>
        </div>
-     </form>
-   </section>
+     </div>
+   </div>
+
    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
  </body>
 
