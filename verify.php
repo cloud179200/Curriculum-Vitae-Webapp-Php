@@ -2,9 +2,11 @@
 include('functions.php');
 if (isset($_GET['token'])) {
     $token = $_GET['token'];
-    verifyUser($token);
+    if(verifyUser($token)){
+        logout(true);
+    }
 }
-logout()
+logout();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,7 +51,6 @@ logout()
                             </div>
                             &nbsp;
                             <strong class="h2">Verifying...</strong>
-
                         </div>
                     </div>
                 </div>
