@@ -43,7 +43,6 @@ DROP TABLE IF EXISTS users;
     `user_lastname` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_vietnamese_ci NOT NULL,
     `user_email` varchar(255) NOT NULL,
     `user_role` varchar(255) NOT NULL,
-    `randSalt` varchar(255) NOT NULL DEFAULT '$2y$10$iusesomecrazystrings22',
     `verified` tinyint(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (`user_id`),
     UNIQUE KEY `username` (`username`)

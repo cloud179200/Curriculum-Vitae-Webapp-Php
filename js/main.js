@@ -2,12 +2,12 @@
     "use strict";
 
     // Spinner
-    var spinner = function () {
+    const spinner = function () {
         setTimeout(function () {
             if ($('#spinner').length > 0) {
                 $('#spinner').removeClass('show');
             }
-        }, 1);
+        }, 1000);
     };
     spinner();
     
@@ -19,9 +19,11 @@
     // Sticky Navbar
     $(window).scroll(function () {
         if ($(this).scrollTop() > 300) {
-            $('.sticky-top').addClass('shadow-sm').css('top', '0px');
+            $('.sticky-top').addClass('fixed-top');
+            $('.sticky-top').removeClass('sticky-top');
         } else {
-            $('.sticky-top').removeClass('shadow-sm').css('top', '-100px');
+            $('.fixed-top').addClass('sticky-top');
+            $('.fixed-top').removeClass('fixed-top');
         }
     });
     

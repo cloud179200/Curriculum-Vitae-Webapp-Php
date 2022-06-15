@@ -10,10 +10,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = $_POST["status"];
         $desired_job = $_POST["desired_job"];
         $result = addCVInfo($_COOKIE["token"], $name, $date_of_birth, $address, $phone, $detail, $status, $desired_job);
-        return $result ? json_encode(array("success" => true)) : json_encode(array("error" => "something went wrong"));
+        echo $result ? json_encode(array("success" => true)) : json_encode(array("error" => "something went wrong"));
+        exit();
     }
     http_response_code(400);
-    return json_encode(array("error" => "missing params"));
+    echo json_encode(array("error" => true));
+    exit();
 }
 http_response_code(401);
-return json_encode(array("error" => "unauthorized"));
+echo json_encode(array("error" => true));
+exit();
+

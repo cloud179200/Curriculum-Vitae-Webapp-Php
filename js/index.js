@@ -978,6 +978,4 @@ const occupations = [
   "yardmaster",
   "zoologist",
 ];
-$(".lazy").Lazy({
-  effect: "fadeIn",
-});
+
