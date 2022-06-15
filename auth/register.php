@@ -3,7 +3,6 @@ include('../functions.php');
 include('../constant.php');
 session_start();
 handleRoute();
-// removeUser("abcd");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -27,17 +26,20 @@ handleRoute();
   <link href="../lib/lightbox/css/lightbox.min.css" rel="stylesheet">
 
   <link href="../css/bootstrap.min.css" rel="stylesheet">
-
   <link href="../css/style.css" rel="stylesheet">
   <link href="../css/custom.css" rel="stylesheet">
-
 </head>
 
 <body class="overflow-hidden">
   <div class="row vh-100">
-    <div class="col-6 p-0">
+    <div class="col-1 p-0 vh-100">
+      <a href="../index.php" class="btn btn-success pr-4 pl-4 d-flex align-items-center justify-content-center w-100 h-100">
+        <i class="d-inline fa fa-2x fa-arrow-left"></i>
+      </a>
+    </div>
+    <div class="col-5 p-0">
       <section class="vh-100" style="background-color: #eee;">
-        <form novalidate method="POST" action="./register.php" class="container-xs py-5 h-100 needs-validation <?php if (isset($_POST['btnRegister'])) {
+        <form novalidate method="POST" action="./register.php" class="container-xs py-5 h-100 needs-validation wow zoomInUp <?php if (isset($_POST['btnRegister'])) {
                                                                                                                   echo "was-validated";
                                                                                                                 }
                                                                                                                 ?>">
@@ -55,6 +57,9 @@ handleRoute();
             }
             if (empty($_POST['txtEmail'])) {
               $errors["txtEmail"] = $errorsMessage["empty"];
+            }
+            if (empty($_POST['txtGender'])) {
+              $errors["txtGender"] = $errorsMessage["empty"];
             }
             if (empty($_POST['txtPass1'])) {
               $errors["txtPass1"] = $errorsMessage["empty"];
@@ -74,19 +79,19 @@ handleRoute();
               $userName = $_POST['txtUser'];
               $email = $_POST['txtEmail'];
               $pass = $_POST['txtPass1'];
-
+              $gender = $_POST['txtGender'];
               // 2. Ra lệnh kiểm tra
               if (checkUserExist($userName, $email)) {
                 header("location:" . $_SERVER['REQUEST_URI'] . '?error=Username or Email existed.');
               } else {
-                if (addNewUser($firstName, $lastName, $userName, $email, $pass)) {
+                if (addNewUser($firstName, $lastName, $userName, $email, $gender, $pass)) {
                   // Xử lý chức năng GỬI EMAIL
                   $token = generateAuthToken($userName);
                   if (empty($token)) {
                     removeUser($userName);
                     return false;
                   }
-                  addCVInfo($token, "null", "null", "null", "null", "null", "0", "null");
+                  addCVInfo($token, "null", "null", "null", "null", "null", "0", "null", $gender);
                   if (!sendEmailForActivation($email, $token)) {
                     removeUser($userName);
                     header("location:" . $_SERVER['REQUEST_URI'] . '?error=Server error');
@@ -190,8 +195,21 @@ handleRoute();
       </div>
     </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  <!-- JavaScript Libraries -->
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../lib/wow/wow.min.js"></script>
+  <script src="../lib/easing/easing.min.js"></script>
+  <script src="../lib/waypoints/waypoints.min.js"></script>
+  <script src="../lib/counterup/counterup.min.js"></script>
+  <script src="../lib/owlcarousel/owl.carousel.min.js"></script>
+  <script src="../lib/isotope/isotope.pkgd.min.js"></script>
+  <script src="../lib/lightbox/js/lightbox.min.js"></script>
+  <!-- Toast -->
+  <script src="../js/toast.js"></script>
+  <!-- Template Javascript -->
+  <script src="../js/main.js"></script>
+  <script src="../js/index.js"></script>
 </body>
 
 </html>

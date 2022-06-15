@@ -52,13 +52,16 @@ $cvInfo = getCVInfoPersonal($token);
     </div>
     <!-- Spinner Start -->
     <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
             <span class="sr-only">Loading...</span>
         </div>
     </div>
     <nav class="navbar navbar-expand-sm bg-white navbar-light sticky-top p-0 shadow">
-        <div class="container-fluid">
-            <a class="navbar-brand h1 d-flex align-items-center text-uppercase" href="#">
+        <div class="container-fluid p-0 justify-content-start">
+            <a href="../index.php" class="btn btn-success rounded-0 p-4 d-flex align-items-center justify-content-center">
+                <i class="d-inline fa fa-arrow-left ms-3 me-3"></i>
+            </a>
+            <a class="navbar-brand h1 d-flex align-items-center text-uppercase p-0 m-0">
                 <img src="../img/logo.png" alt="" width="auto" height="50" class="d-inline-block align-text-top">
                 &nbsp;Create your CV & Find the right job
             </a>
@@ -66,9 +69,6 @@ $cvInfo = getCVInfoPersonal($token);
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <!-- <span class="nav-link dropdown-toggle border border-success rounded-pill text-center p-2" href="#" id="navbarDropdown" role="button" style="width: 10rem;">
-                        <?php echo $name; ?>
-                    </span> -->
                     <span class="nav-link dropdown-toggle border border-success rounded-pill text-center p-2" role="button" style="width: 10rem;">
                         <?php echo $name; ?>
                     </span>
@@ -98,8 +98,8 @@ $cvInfo = getCVInfoPersonal($token);
         </button>
     </nav>
     <div class="container-fluid pt-3 custom-linear-gradient-background-container">
-        <div class="container">
-            <nav class="mb-2">
+        <div class="container wow slideInRight" data-wow-delay="1s">
+            <nav>
                 <div class="nav nav-pills nav-justified nav-tabs custom-nav-tabs" id="nav-tab" role="tablist">
                     <span class="nav-link rounded-pill active custom-nav-link fw-bold" id="nav-cv-infomation-tab" data-bs-toggle="tab" data-bs-target="#nav-cv-infomation" type="button" role="tab" aria-controls="nav-cv-infomation" aria-selected="true">Your CV</span>
                     <span class="nav-link rounded-pill custom-nav-link fw-bold position-relative" id="nav-contacts-tab" data-bs-toggle="tab" data-bs-target="#nav-contacts" type="button" role="tab" aria-controls="nav-contacts" aria-selected="false">Contacts list
@@ -113,8 +113,8 @@ $cvInfo = getCVInfoPersonal($token);
                     </span>
                 </div>
             </nav>
-            <div class="tab-content" id="nav-tabContent" style="min-height: 100vh;">
-                <div class="tab-pane fade show active" id="nav-cv-infomation" role="tabpanel" aria-labelledby="nav-cv-infomation-tab">
+            <div class="tab-content mt-3" id="nav-tabContent" style="min-height: 100vh;">
+                <div class="tab-pane pt-2 fade show active" id="nav-cv-infomation" role="tabpanel" aria-labelledby="nav-cv-infomation-tab">
                     <div class="row d-flex justify-content-between pt-3 pb-3">
                         <div class="col-7">
                             <div class="p-0 row mb-2 p-2 rounded custom-editor-area" id="skillArea">
@@ -126,12 +126,12 @@ $cvInfo = getCVInfoPersonal($token);
                             <div class="p-0 row mb-2 p-2 rounded custom-editor-area" id="educationArea">
                             </div>
                         </div>
-                        <div class="col-4 rounded p-4" style="background-color: #ecf0f1;">
+                        <div class="col-4 pl-3 rounded personal-infomation-container rounded">
                             <div class="row p-2 mb-4">
-                                <div class="text-center h3 text-center fw-bold">
+                                <div class="text-center h4 text-center fw-bold">
                                     Personal Infomation
                                 </div>
-                                <img src="../img/man.png" class="img-thumbnail rounded-circle" width="100%">
+                                <img src="../img/<?php echo $_SESSION["gender"] ? "man.png" : "woman.png" ?>" class="img-thumbnail rounded-circle" width="100%">
                             </div>
                             <div class="p-0 row flex-nowrap mb-1" id="nameArea">
                             </div>
@@ -159,8 +159,8 @@ $cvInfo = getCVInfoPersonal($token);
                         </div>
                     </div>
                 </div>
-                <div class="tab-pane fade" id="nav-contacts" role="tabpanel" aria-labelledby="nav-contacts-tab" style="min-height: 100vh;background-color: #ecf0f1;">
-                    <div class="row m-2 mt-4 border rounder-2 shadow">
+                <div class="tab-pane pt-2 fade" id="nav-contacts" role="tabpanel" aria-labelledby="nav-contacts-tab" style="min-height: 100vh;background-color: #FFFFFF;">
+                    <div class="row p-2">
                         <table id="tableContacts" class="table table-striped" style="width:100%">
                             <thead>
                                 <tr>
@@ -203,7 +203,6 @@ $cvInfo = getCVInfoPersonal($token);
     <script src="../lib/lightbox/js/lightbox.min.js"></script>
     <!-- datatable -->
     <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
-
     <!-- Template Javascript -->
     <script src="../js/main.js"></script>
     <script src="../js/index.js"></script>
@@ -380,7 +379,7 @@ $cvInfo = getCVInfoPersonal($token);
             <div class="col-10">
                 <input class="form-control w-100 h-100" list="datalistOptionsOccupation" id="txtDeriseJob" name="txtDeriseJob" value="${CVData.desiredJob}" placeholder="Type to search job..." onchange="onChangeInput('txtDeriseJob')" onblur="onBlurInput()">
                     <datalist id="datalistOptionsOccupation">
-                        ${[...occupations].map(occupation => `<option value="${occupation}">`).join("")}
+                        ${[...occupations].map(occupation => `<option value="${occupation}" class="text-uppercase">${occupation}</option>`).join("")}
                     </datalist>
             </div>`;
             DOM.deriseJobArea.onclick = null;
@@ -538,6 +537,7 @@ $cvInfo = getCVInfoPersonal($token);
             formData.append("date_of_birth", CVData.date_of_birth)
             formData.append("detail", JSON.stringify(CVData.detail))
             formData.append("status", CVData.status ? "1" : "0")
+            formData.append("desired_job", CVData.desiredJob)
             e.target.disabled = true;
             $.ajax({
                 type: "POST",
@@ -594,37 +594,37 @@ $cvInfo = getCVInfoPersonal($token);
                 <label class="col-form-label"><i class="fas fa-2x fa-file-signature text-dark"></i></label>
             </div>
             <div class="col-10">
-                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-placement="bottom" title="${CVData.name}">${CVData.name}</p></label>
+                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.name}">${CVData.name}</p></label>
             </div>`;
         if (DOM.dateOfBirthArea) DOM.dateOfBirthArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-birthday-cake text-dark"></i></label>
             </div>
             <div class="col-10">
-                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-placement="bottom" title="${CVData.date_of_birth}">${CVData.date_of_birth}</p></label>
+                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.date_of_birth}">${CVData.date_of_birth}</p></label>
             </div>`;
         if (DOM.addressArea) DOM.addressArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-address-book text-dark"></i></label>
             </div>
             <div class="col-10">
-                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-placement="bottom" title="${CVData.address}">${CVData.address}</p></label>
+                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.address}">${CVData.address}</p></label>
             </div>`;
         if (DOM.phoneArea) DOM.phoneArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-mobile text-dark"></i></label>
             </div>
             <div class="col-10">
-                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-placement="bottom" title="${CVData.phone}">${CVData.phone}</p></label>
+                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.phone}">${CVData.phone}</p></label>
             </div>`;
         if (DOM.deriseJobArea) DOM.deriseJobArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-briefcase text-dark"></i></label>
             </div>
             <div class="col-10">
-                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p class="text-uppercase" data-toggle="tooltip" data-placement="bottom" title="${CVData.desiredJob}">${CVData.desiredJob}</p></label>
+                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p class="text-uppercase" data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.desiredJob}">${CVData.desiredJob}</p></label>
             </div>`;
         if (DOM.careerGoalsArea) DOM.careerGoalsArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-align-justify text-dark"></i></label>
             </div>
             <div class="col-10">
-                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center" ><p data-toggle="tooltip" data-placement="bottom" title="${CVData.detail.careerGoals}">${CVData.detail.careerGoals}</p></label>
+                <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center" ><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.detail.careerGoals}">${CVData.detail.careerGoals}</p></label>
             </div>`;
         if (DOM.skillArea) DOM.skillArea.innerHTML = `
              <div class="col-12 fw-bold h3">Skill</div>

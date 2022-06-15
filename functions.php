@@ -36,7 +36,7 @@ function getContacts($token)
     mysqli_close($conn);
     return $contacts;
 }
-function getCVInfoPublic()
+function getCVInfoPublic($filter_job = "")
 {
     require("constant.php");
     $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
@@ -49,7 +49,14 @@ function getCVInfoPublic()
 
     $infos = array();
     while ($row = mysqli_fetch_assoc($result)) {
-        array_push($infos, $row);
+        if(!empty($filter_job)){
+            if($row["derised_job"] == $filter_job){
+                array_push($infos, $row);
+            }
+        }
+        else{
+            array_push($infos, $row);
+        }
     }
 
     mysqli_close($conn);
@@ -81,7 +88,6 @@ function getCVInfoById($id)
     if (!$conn) {
         die("Ko the ket noi");
     }
-
     $sql = "SELECT * FROM cv_information WHERE cv_id='$id' and status=TRUE";
     $result = mysqli_query($conn, $sql);
     $info = mysqli_fetch_assoc($result);
@@ -89,7 +95,7 @@ function getCVInfoById($id)
     return $info;
 }
 
-function addCVInfo($token, $name, $date_of_birth, $address, $phone, $detail, $status, $desired_job)
+function addCVInfo($token, $name, $date_of_birth, $address, $phone, $detail, $status, $desired_job, $gender)
 {
     $username = isTokenValid($token);
     if (!$username) {
@@ -100,15 +106,15 @@ function addCVInfo($token, $name, $date_of_birth, $address, $phone, $detail, $st
     if (!$conn) {
         die("Ko the ket noi");
     }
-    $sql = "INSERT INTO cv_information(username,name,date_of_birth,address,phone,detail, status, desired_job)
-    VALUES ('$username', '$name', '$date_of_birth', '$address', '$phone', '$detail', '$status', '$desired_job')";
+    $sql = "INSERT INTO cv_information(username,name,date_of_birth,address,phone,detail, status, desired_job, gender)
+    VALUES ('$username', '$name', '$date_of_birth', '$address', '$phone', '$detail', '$status', '$desired_job', '$gender')";
     $result = mysqli_query($conn, $sql);
     if (!$result) {
         return false;
     }
     return true;
 }
-function updateCVInfo($token, $cv_id, $name, $date_of_birth, $address, $phone, $detail, $status)
+function updateCVInfo($token, $cv_id, $name, $date_of_birth, $address, $phone, $detail, $status, $desired_job)
 {
     $username = isTokenValid($token);
     if (!$username) {
@@ -120,7 +126,7 @@ function updateCVInfo($token, $cv_id, $name, $date_of_birth, $address, $phone, $
         die("Ko the ket noi");
     }
     $sql = "UPDATE cv_information 
-    SET name='$name',date_of_birth='$date_of_birth',address='$address',phone='$phone',detail='$detail', status='$status'
+    SET name='$name',date_of_birth='$date_of_birth',address='$address',phone='$phone',detail='$detail', status='$status', desired_job='$desired_job'
     WHERE cv_id='$cv_id'";
     if (!mysqli_query($conn, $sql)) {
         return false;
@@ -219,7 +225,7 @@ function removeContact($contact_id, $token){
     mysqli_close($conn);
     return true;
 }
-function addNewUser($firstName, $lastName, $userName, $email, $pass)
+function addNewUser($firstName, $lastName, $userName, $email, $gender, $pass)
 {
     require("constant.php");
     $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
@@ -228,8 +234,8 @@ function addNewUser($firstName, $lastName, $userName, $email, $pass)
         die("Ko the ket noi");
     }
     $pass_hash = password_hash($pass, PASSWORD_DEFAULT);
-    $sql = "INSERT INTO users (user_firstname, user_lastname, username, user_email, user_password, user_role, verified)
-          VALUES ('$firstName', '$lastName', '$userName', '$email', '$pass_hash', 'user', 'FALSE')";
+    $sql = "INSERT INTO users (user_firstname, user_lastname, username, user_email, user_password, user_role, verified, gender)
+          VALUES ('$firstName', '$lastName', '$userName', '$email', '$pass_hash', 'user', 'FALSE', '$gender')";
     $n = mysqli_query($conn, $sql);
 
     if ($n > 0) {
@@ -371,6 +377,9 @@ function generateAuthToken($username)
 function authorized()
 {
     session_start();
+    if(!isPrivateRoute()){
+        return;
+    }
     require("constant.php");
     $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
     //$conn = mysqli_connect('localhost', 'root', '', 'baitaplon');
@@ -401,6 +410,7 @@ function authorized()
     $_SESSION["user_lastname"] = $row['user_lastname'];
     $_SESSION["user_email"] = $row['user_email'];
     $_SESSION["user_role"] = $row['user_role'];
+    $_SESSION["gender"] = $row['gender'];
 }
 
 function handleRoute()
@@ -463,7 +473,8 @@ function logout($isVerifySuccess = false)
         mysqli_query($conn, $sql);
     }
     mysqli_close($conn);
-    header_remove();
+    session_unset();
+    setcookie("token", "", time() - 3600, "/");
     session_destroy();
     header("location:" . $route["auth"].($isVerifySuccess ? "/login.php?success=Verify account success. You can login now ^.^": ""));
 }

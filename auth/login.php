@@ -40,7 +40,12 @@
 
  <body class="overflow-hidden">
    <div class="row vh-100 overflow-hidden">
-     <div class="col-6 p-0">
+     <div class="col-1 p-0 vh-100">
+       <a href="../index.php" class="btn btn-success pr-4 pl-4 d-flex align-items-center justify-content-center w-100 h-100">
+         <i class="d-inline fa fa-2x fa-arrow-left"></i>
+       </a>
+     </div>
+     <div class="col-5 p-0">
        <?php
         $errors = array();
         if (isset($_POST['btnLogin'])) {
@@ -63,8 +68,8 @@
           }
         }
         ?>
-       <section class="vh-100" style="background-color: #eee;">
-         <form novalidate method="POST" action="./login.php" class="container py-5 h-100 needs-validation <?php if (isset($_POST['btnLogin'])) echo "was-validated" ?>">
+       <section class="vh-100 " style="background-color: #eee;">
+         <form novalidate method="POST" action="./login.php" class="container py-5 h-100 wow zoomInUp needs-validation <?php if (isset($_POST['btnLogin'])) echo "was-validated" ?>">
            <div class="row d-flex justify-content-center align-items-center h-100">
              <div class="col-12 col-md-9 col-lg-9 col-xl-9">
                <div class="card shadow-2-strong" style="border-radius: 1rem;">
@@ -128,8 +133,21 @@
        </div>
      </div>
    </div>
-
-   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+   <!-- JavaScript Libraries -->
+   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+   <script src="../lib/wow/wow.min.js"></script>
+   <script src="../lib/easing/easing.min.js"></script>
+   <script src="../lib/waypoints/waypoints.min.js"></script>
+   <script src="../lib/counterup/counterup.min.js"></script>
+   <script src="../lib/owlcarousel/owl.carousel.min.js"></script>
+   <script src="../lib/isotope/isotope.pkgd.min.js"></script>
+   <script src="../lib/lightbox/js/lightbox.min.js"></script>
+   <!-- Toast -->
+   <script src="../js/toast.js"></script>
+   <!-- Template Javascript -->
+   <script src="../js/main.js"></script>
+   <script src="../js/index.js"></script>
  </body>
 
  </html>

@@ -2,7 +2,11 @@
 include('functions.php');
 authorized();
 handleRoute();
-$allCVInfo = getCVInfoPublic();
+$filter_job = "";
+if (isset($_GET["filter_job"])) {
+    $filter_job = $_GET["filter_job"];
+}
+$allCVInfo = getCVInfoPublic($filter_job);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,23 +43,19 @@ $allCVInfo = getCVInfoPublic();
 
 <body>
     <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-xl" style="max-height: 80vh;">
             <div class="modal-content">
+                <div id="spinnerDetailModal" class="bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+                    <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
                 <div class="modal-header">
                     <h5 class="modal-title" id="detailModalLabel">Detail</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="card">
-                        <div class="card-header">
-                            <?php echo $allCVInfo[0]["name"]; ?>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">Special title treatment</h5>
-                            <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                        </div>
-                        <img src="./img/man.png" class="card-img-bottom">
-                  </div>
+                <div class="modal-body" id="detailModalBody" style="max-height: 80vh;">
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -65,14 +65,14 @@ $allCVInfo = getCVInfoPublic();
     </div>
     <!-- Spinner Start -->
     <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
             <span class="sr-only">Loading...</span>
         </div>
     </div>
     <!-- Spinner End -->
     <nav class="navbar navbar-expand-sm bg-white navbar-light sticky-top p-0 shadow">
-        <div class="container-fluid">
-            <a class="navbar-brand h1 d-flex align-items-center text-uppercase" href="#">
+        <div class="container-fluid p-0">
+            <a class="navbar-brand h1 d-flex align-items-center text-uppercase p-0 m-0">
                 <img src="./img/logo.png" alt="" width="auto" height="50" class="d-inline-block align-text-top">
                 &nbsp;Create your CV & Find the right job
             </a>
@@ -90,20 +90,56 @@ $allCVInfo = getCVInfoPublic();
         <div class="container">
             <div class="row">
                 <?php
-                for ($x = 0; $x <= 1000; $x++) {
-                    echo '<div class="col-4 mb-2 lazy">
+                $nullStringArray = array("null", "");
+                for ($x = 0; $x <= 100; $x++) {
+                    foreach ($allCVInfo as $CVInfo) {
+                        $jsonDetail = get_object_vars(json_decode($CVInfo["detail"]));
+                        $skillRender = !empty($jsonDetail["skill"]) ? '<div class="col-12 h4">Skill</div>
+                    <div class="col-12 text-break">
+                        ' . $jsonDetail["skill"] . '
+                    </div>' : "";
+                        $certificateRender = !empty($jsonDetail["certificate"]) ? '<div class="col-12 h4">Certificate</div>
+                    <div class="col-12 text-break">
+                        ' . $jsonDetail["certificate"] . '
+                    </div>' : "";
+                        $experienceRender = !empty($jsonDetail["experience"]) ? '<div class="col-12 h4">Experience</div>
+                    <div class="col-12 text-break">
+                        ' . $jsonDetail["experience"] . '
+                    </div>' : "";
+                        $educationRender = !empty($jsonDetail["education"]) ? '<div class="col-12 h4">Education</div>
+                    <div class="col-12 text-break">
+                        ' . $jsonDetail["education"] . '
+                    </div>' : "";
+                        $careerGoalsRender = !empty($jsonDetail["careerGoals"]) ? '<div class="col-12 fw-bold h3">Career Goals</div>
+                    <div class="col-12 text-break">
+                        ' . $jsonDetail["careerGoals"] . '
+                    </div>' : "";
+                        $desired_jobRender = '<div class="col-12 pt-2 long-text-need-hide-overflow" style="width: 13rem;" data-toggle="tooltip" data-placement="bottom" title="' . strtoupper($CVInfo["desired_job"]) . '">
+                        Looking for a job as: <b class="h4 text-uppercase">' . $CVInfo["desired_job"] . '</b>
+                    </div>';
+                        echo '<div class="col-6 mb-2 wow zoomInUp">
                     <div class="card">
                     <div class="card-header">
-                      ' . $allCVInfo[0]["name"] . '
+                      ' . $CVInfo["name"] . " - " . $CVInfo["cv_id"] . '
                     </div>
                     <div class="card-body">
-                      <h5 class="card-title">Special title treatment</h5>
-                      <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                      <a href="#" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#detailModal">Detail</a>
+                        <div class="row">
+                            <div class="col-7">
+                            ' . $skillRender . $certificateRender . $experienceRender . $educationRender  . '
+                            </div>
+                            <div class="col-5">
+                                <div class="col-12">
+                                    <img src="./img/' . ($CVInfo["gender"] ? "man.png" : "woman.png") . '" class="img-fluid">
+                                </div>
+                                ' . $desired_jobRender . '
+                            </div>
+                        </div>
+                      ' . $careerGoalsRender . '
+                      <button href="#" class="btn btn-success w-100 mt-3" data-bs-toggle="modal" data-bs-target="#detailModal" onclick="getCVById(' . "'" . $CVInfo["cv_id"] . "'" . ')">Detail</button>
                     </div>
-                    <img src="./img/' . ($x % 2 == 0 ? "man.png" : "woman.png") . '" class="card-img-bottom">
                   </div>
                   </div>';
+                    }
                 }
                 ?>
             </div>
@@ -119,15 +155,101 @@ $allCVInfo = getCVInfoPublic();
     <script src="lib/owlcarousel/owl.carousel.min.js"></script>
     <script src="lib/isotope/isotope.pkgd.min.js"></script>
     <script src="lib/lightbox/js/lightbox.min.js"></script>
-    <!-- lazy -->
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.9/jquery.lazy.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.9/jquery.lazy.plugins.min.js"></script>
     <!-- Toast -->
     <script src="js/toast.js"></script>
     <!-- Template Javascript -->
     <script src="js/main.js"></script>
     <script src="js/index.js"></script>
-
 </body>
+<script>
+    const getDOMControl = () => {
+        return {
+            detailModalBody: document.getElementById("detailModalBody"),
+            spinnerDetailModal: document.getElementById("spinnerDetailModal"),
+        }
+    }
+    let detailModalData = {};
+    const loadingDetailModalRenderControl = (loading = false) => {
+        const {
+            spinnerDetailModal
+        } = getDOMControl();
+        if (loading) {
+            spinnerDetailModal.classList.contains("d-none") && spinnerDetailModal.classList.remove("d-none");
+            return
+        }
+        spinnerDetailModal.classList.add("d-none");
+    }
+    const getCVById = (id) => {
+        if (!id) {
+            return;
+        }
+        renderDetailModal({});
+        loadingDetailModalRenderControl(true);
+        $.ajax({
+            type: "GET",
+            url: "./fetch/get/getPublicCV.php?cv_id=" +
+                id,
+            data: {},
+            processData: false,
+            contentType: false,
+            cache: false,
+            timeout: 30000,
+            success: function(data) {
+                const jsonData = JSON.parse(data);
+                const {
+                    error
+                } = jsonData
+                error && $.toast({
+                    type: 'error',
+                    title: 'Notification',
+                    content: 'Error',
+                    delay: 3000,
+                });
+                !error && renderDetailModal(jsonData)
+                loadingDetailModalRenderControl(false);
+            },
+            error: function(err) {
+                console.log(err)
+                $.toast({
+                    type: 'error',
+                    title: 'Notification',
+                    content: 'Error',
+                    delay: 3000,
+                });
+                loadingDetailModalRenderControl(false);
+            }
+        });
+    }
+    const renderDetailModal = (detail) => {
+        detailModalData = detail;
+        if (detailModalData.detail) {
+            detailModalData.detail = JSON.parse(detailModalData.detail)
+        }
+        console.log("[parseData]", detailModalData)
+        const DOM = getDOMControl();
+        if (Object.entries(detailModalData).length === 0) {
+            DOM.detailModalBody.innerHTML = "";
+            return
+        }
+        const {address, cv_id, date_of_birth, gender, name } = detailModalData
+        DOM.detailModalBody.innerHTML = `<nav>
+                <div class="nav nav-pills nav-justified nav-tabs custom-nav-tabs" id="nav-tab" role="tablist">
+                    <span class="nav-link active custom-nav-link fw-bold" id="nav-basic-infomation-tab" data-bs-toggle="tab" data-bs-target="#nav-basic-infomation" type="button" role="tab" aria-controls="nav-basic-infomation" aria-selected="true">Your CV</span>
+                    <span class="nav-link custom-nav-link fw-bold position-relative" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Contact
+                    </span>
+                </div>
+            </nav>
+            <div class="tab-content mt-3" id="nav-tabContent">
+                <div class="tab-pane pt-2 fade show active" id="nav-basic-infomation" role="tabpanel" aria-labelledby="nav-basic-infomation-tab">
+                    <div class="row">
+                    </div>
+                </div>
+                <div class="tab-pane pt-2 fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" style="background-color: #FFFFFF;">
+                    <div class="row">
+                    </div>
+                </div>
+            </div>`;
+    }
+</script>
 
 </html>

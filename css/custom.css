@@ -1,10 +1,5 @@
 .custom-linear-gradient-background-container {
-  background: rgb(0, 255, 98);
-  background: radial-gradient(
-    circle,
-    rgba(0, 255, 98, 1) 24%,
-    rgba(59, 167, 105, 1) 85%
-  );
+  background-color: #f1f2f6;
   min-height: 100vh;
 }
 .custom-nav-tabs {
@@ -62,13 +57,29 @@
 
 .custom-editor-area {
   cursor: pointer;
-  background-color: #ecf0f1;
+  background-color: #ffffff;
   min-height: 15vh;
   transition: all 0.2s;
+  padding: 0.8rem !important;
 }
 .custom-editor-area:hover {
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+  padding: 0.7rem !important;
 }
 .custom-editor-area:hover:focus {
-  background-color: #ecf0f1;
+  background-color: #ffffff;
+}
+.personal-infomation-container {
+  background-color: #ffffff;
+  transition: all 0.2s;
+  padding: 1.5rem !important;
+}
+.personal-infomation-container:hover {
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+  padding: 1.2rem !important;
+}
+.long-text-need-hide-overflow {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
