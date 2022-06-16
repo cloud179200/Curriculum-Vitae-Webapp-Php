@@ -7,14 +7,11 @@
 
 
 //MySQL server and database
-$dbhost = 'localhost';
-$dbuser = 'root';
-$dbpass = '';
-$dbname = 'baitaplon';
+require("./constant.php");
 $tables = '*';
 
 //Call the core function
-backup_tables($dbhost, $dbuser, $dbpass, $dbname, $tables);
+backup_tables($dbhost, $dbusername, $dbpassword, $dbname, $tables);
 
 //Core function
 function backup_tables($host, $user, $pass, $dbname, $tables = '*') {

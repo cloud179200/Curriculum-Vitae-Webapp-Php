@@ -28,12 +28,12 @@ function getContacts($token)
     $cv_id = mysqli_fetch_assoc($result)["cv_id"];
     $sql = "SELECT * FROM contact WHERE cv_id='$cv_id'";
     $result = mysqli_query($conn, $sql);
-
     while ($row = mysqli_fetch_assoc($result)) {
         array_push($contacts, $row);
     }
 
     mysqli_close($conn);
+    
     return $contacts;
 }
 function getCVInfoPublic($filter_job = "")
@@ -50,7 +50,7 @@ function getCVInfoPublic($filter_job = "")
     $infos = array();
     while ($row = mysqli_fetch_assoc($result)) {
         if(!empty($filter_job)){
-            if($row["derised_job"] == $filter_job){
+            if($row["desired_job"] == $filter_job){
                 array_push($infos, $row);
             }
         }
@@ -184,7 +184,7 @@ function checkUserExist($userName, $email)
 
     return false;
 }
-function addContact($cv_id, $contact_name, $phone, $email){
+function addContact($cv_id, $contact_name, $phone, $email, $message){
     require("constant.php");
     $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
     if (!$conn) {
@@ -194,7 +194,7 @@ function addContact($cv_id, $contact_name, $phone, $email){
     if(!$cvInfo){
         return false;
     }
-    $sql = "INSERT INTO contact(cv_id, contact_name, phone, email) VALUES ('$cv_id', '$contact_name', '$phone', '$email')";
+    $sql = "INSERT INTO contact(cv_id, contact_name, phone, email, message) VALUES ('$cv_id', '$contact_name', '$phone', '$email', '$message')";
     if(!mysqli_query($conn, $sql)){
         mysqli_close($conn);
         return false;
