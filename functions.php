@@ -469,7 +469,7 @@ function logout($isVerifySuccess = false)
     }
     if (isset($_SESSION["username"])) {
         $username = $_SESSION["username"];
-        $sql = "DELETE * FROM users_online WHERE username='$username'";
+        $sql = "DELETE FROM users_online WHERE username='$username'";
         mysqli_query($conn, $sql);
     }
     mysqli_close($conn);
