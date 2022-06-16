@@ -40,9 +40,9 @@ handleRoute();
     <div class="col-5 p-0">
       <section class="vh-100" style="background-color: #eee;">
         <form novalidate method="POST" action="./register.php" class="container-xs py-5 h-100 needs-validation wow zoomInUp <?php if (isset($_POST['btnRegister'])) {
-                                                                                                                  echo "was-validated";
-                                                                                                                }
-                                                                                                                ?>">
+                                                                                                                              echo "was-validated";
+                                                                                                                            }
+                                                                                                                            ?>">
           <?php
           $errors = array();
           if (isset($_POST['btnRegister'])) {
@@ -118,38 +118,49 @@ handleRoute();
                     ?>
                   </div>
                   <div class="form-outline mb-4">
-                    <label class="form-label float-start" for="typePasswordX-2">Last name</label>
+                    <label class="form-label float-start">Last name</label>
                     <input autocomplete type="text" class="form-control" value="<?php if (!empty($_POST['txtLastName'])) echo $_POST['txtLastName'] ?>" id="txtLastName" name="txtLastName" placeholder="Last Name" required>
                     <?php
                     if (isset($errors["txtLastName"])) echo '<div class="invalid-feedback text-start">' . $errors["txtLastName"] . '</div>';
                     ?>
                   </div>
                   <div class="form-outline mb-4">
-                    <label class="form-label float-start" for="typePasswordX-2">Username</label>
+                    <label class="form-label float-start">Username</label>
                     <input autocomplete type="text" class="form-control" value="<?php if (!empty($_POST['txtUser'])) echo $_POST['txtUser'] ?>" id="txtUser" name="txtUser" placeholder="Username" required>
                     <?php
                     if (isset($errors["txtUser"])) echo '<div class="invalid-feedback text-start">' . $errors["txtUser"] . '</div>';
                     ?>
                   </div>
                   <div class="form-outline mb-4">
-                    <label class="form-label float-start" for="typePasswordX-2">Email</label>
+                    <label class="form-label float-start">Email</label>
                     <input autocomplete type="email" class="form-control" value="<?php if (!empty($_POST['txtEmail'])) echo $_POST['txtEmail'] ?>" id="txtEmail" name="txtEmail" placeholder="Email" required>
                     <?php
                     if (isset($errors["txtEmail"])) echo '<div class="invalid-feedback text-start">' . $errors["txtEmail"] . '</div>';
                     ?>
                   </div>
                   <div class="form-outline mb-4">
-                    <label class="form-label float-start" for="typePasswordX-2">Password</label>
+                    <label class="form-label float-start">Password</label>
                     <input autocomplete type="password" class="form-control" value="<?php if (!empty($_POST['txtPass1'])) echo $_POST['txtPass1'] ?>" id="txtPass1" name="txtPass1" placeholder="Password" required>
                     <?php
                     if (isset($errors["txtPass1"])) echo '<div class="invalid-feedback text-start">' . $errors["txtPass1"] . '</div>';
                     ?>
                   </div>
                   <div class="form-outline mb-4">
-                    <label class="form-label float-start" for="typePasswordX-2">Retype Password</label>
+                    <label class="form-label float-start">Retype Password</label>
                     <input autocomplete type="password" class="form-control" value="<?php if (!empty($_POST['txtPass2']) && !isset($errors["txtPass2"])) echo $_POST['txtPass2'] ?>" id="txtPass2" name="txtPass2" placeholder="Retype Password" required>
                     <?php
                     if (isset($errors["txtPass2"])) echo '<div class="invalid-feedback text-start">' . $errors["txtPass2"] . '</div>';
+                    ?>
+                  </div>
+                  <div class="form-outline mb-4">
+                    <label class="form-label float-start">Gender</label>
+                    <select id="txtGender" name="txtGender" class="form-select" aria-label="Gender select" required>
+                      <option <?php if (!isset($_POST['txtGender'])) echo "selected"; ?>>Select gender...</option>
+                      <option value="0" <?php if (isset($_POST['txtGender']) && $_POST['txtGender'] == "0") echo "selected"; ?>>Female</option>
+                      <option value="1" <?php if (isset($_POST['txtGender']) && $_POST['txtGender'] == "1") echo "selected"; ?>>Male</option>
+                    </select>
+                    <?php
+                    if (isset($errors["txtGender"])) echo '<div class="invalid-feedback text-start">' . $errors["txtGender"] . '</div>';
                     ?>
                   </div>
                   <div class="text-end pb-4 fw-bold"><a href="./login.php" class="link-success">Already have an account?</a></div>
