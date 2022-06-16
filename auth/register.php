@@ -39,7 +39,7 @@ handleRoute();
     </div>
     <div class="col-5 p-0">
       <section class="vh-100" style="background-color: #eee;">
-        <form novalidate method="POST" action="./register.php" class="container-xs py-5 h-100 needs-validation wow zoomInUp <?php if (isset($_POST['btnRegister'])) {
+        <form novalidate method="POST" action="./register.php" class="container-xs py-1 h-100 needs-validation wow zoomInUp <?php if (isset($_POST['btnRegister'])) {
                                                                                                                               echo "was-validated";
                                                                                                                             }
                                                                                                                             ?>">
@@ -109,7 +109,7 @@ handleRoute();
             <div class="col-12 col-md-9 col-lg-9 col-xl-9">
               <div class="card shadow-2-strong" style="border-radius: 1rem;">
                 <div class="card-body p-5 text-center">
-                  <h3 class="mb-5">Login</h3>
+                  <h3 class="mb-5">Register</h3>
                   <div class="form-outline mb-4 ">
                     <label class="form-label float-start" for="typeEmailX-2">First name</label>
                     <input autocomplete type="text" class="form-control" value="<?php if (!empty($_POST['txtFirstName'])) echo $_POST['txtFirstName'] ?>" id="txtFirstName" name="txtFirstName" placeholder="First Name" required>

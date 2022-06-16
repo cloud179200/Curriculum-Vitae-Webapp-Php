@@ -521,7 +521,7 @@ $cvInfo = getCVInfoPersonal($token);
         }
         DOM.certificateArea.onclick = (e) => {
             DOM.certificateArea.innerHTML = `
-            <div class="col-12 fw-bold h3">Education</div>
+            <div class="col-12 fw-bold h3">Certificate</div>
             <div class="col-12">
                 <div id="txtCertificate"></div>
             </div>`;
@@ -553,7 +553,7 @@ $cvInfo = getCVInfoPersonal($token);
         }
         DOM.experienceArea.onclick = (e) => {
             DOM.experienceArea.innerHTML = `
-            <div class="col-12 fw-bold h3">Education</div>
+            <div class="col-12 fw-bold h3">Experience</div>
             <div class="col-12">
                 <div id="txtExperience"></div>
             </div>`;
