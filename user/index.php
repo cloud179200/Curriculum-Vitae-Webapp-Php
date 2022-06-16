@@ -105,9 +105,9 @@ $cvInfo = getCVInfoPersonal($token);
                     <span class="nav-link rounded-pill custom-nav-link fw-bold position-relative" id="nav-contacts-tab" data-bs-toggle="tab" data-bs-target="#nav-contacts" type="button" role="tab" aria-controls="nav-contacts" aria-selected="false">Contacts list
                         <?php
                         if (count($contacts) > 0) {
-                            echo `<span class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
+                            echo '<span class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
                             <span class="visually-hidden">New alerts</span>
-                        </span>`;
+                        </span>';
                         }
                         ?>
                     </span>
@@ -168,20 +168,24 @@ $cvInfo = getCVInfoPersonal($token);
                                     <th>Name</th>
                                     <th>Phone number</th>
                                     <th>Email</th>
+                                    <th>Message</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
                                 foreach ($contacts as $contact) {
-                                    echo `<tr>
-                                        <td>{$$contact["contact_id"]}</td>
-                                        <td>{$contact["contact_name"]}</td>
-                                        <td>{$contact["phone_number"]}</td>
-                                        <td>{$contact["email"]}</td>
-                                        <td><span class="btn btn-ouline-danger rounded-pill w-100" onclick="onDeleteContact('{$contact["contact_id"]}')"><i class="fas fa-trash-alt"></i></span></td>
-                                    </tr>`;
-                                }
+                                ?>
+                                    <tr>
+                                        <td><?php echo $contact["contact_id"] ?></td>
+                                        <td><?php echo $contact["contact_name"] ?></td>
+                                        <td><?php echo $contact["phone"] ?></td>
+                                        <td><?php echo $contact["email"] ?></td>
+                                        <td><?php echo $contact["message"] ?></td>
+                                        <td><span class="btn btn-danger w-100 delete-contact-btn" onclick="onDeleteContact('<?php echo $contact['contact_id'] ?>')"><i class="fas fa-trash-alt"></i></span></td>
+                                    </tr>
+                                <?php
+                                };
                                 ?>
                             </tbody>
                         </table>
@@ -212,24 +216,74 @@ $cvInfo = getCVInfoPersonal($token);
     <script src="https://cdn.ckeditor.com/ckeditor5/34.1.0/classic/ckeditor.js"></script>
 </body>
 <script>
+    let tableContacts = null;
+    let deleteCurrentDeleteBtnHoverIn = null;
     $(document).ready(function() {
-        $('#tableContacts').DataTable();
+        tableContacts = $('#tableContacts').DataTable({
+            search: {
+                return: true,
+            },
+        });
     });
 
     const onDeleteContact = (contactId) => {
-        $.toast({
-            type: 'success',
-            title: 'Title',
-            subtitle: 'Info',
-            content: contactId,
-            delay: 3000,
-        });
-        $.toast({
-            type: 'error',
-            title: 'Title',
-            subtitle: 'Info',
-            content: contactId,
-            delay: 3000,
+        if (!contactId) {
+            return
+        }
+        const DOM = getDOMControl();
+        const formData = new FormData();
+        formData.append("contact_id", contactId)
+        DOM.allDeleteContactBtn.forEach(elm => {
+            elm.disabled = true
+        })
+        $.ajax({
+            type: "POST",
+            enctype: 'multipart/form-data',
+            url: "../fetch/post/removeContact.php",
+            data: formData,
+            processData: false,
+            contentType: false,
+            cache: false,
+            timeout: 30000,
+            success: function(data) {
+                const {
+                    success,
+                    error
+                } = JSON.parse(data);
+                if (success) {
+                    deleteCurrentDeleteBtnHoverIn && tableContacts.row($(deleteCurrentDeleteBtnHoverIn).parents('tr')).remove().draw();
+                    if(tableContacts.rows().count() === 0){
+                        DOM.contactsTab.innerHTML = "Contacts list";
+                    }
+                    $.toast({
+                        type: 'success',
+                        title: 'Notification',
+                        content: 'Success',
+                        delay: 3000,
+                    })
+                };
+                error && $.toast({
+                    type: 'error',
+                    title: 'Notification',
+                    content: 'Error',
+                    delay: 3000,
+                });
+                DOM.allDeleteContactBtn.forEach(elm => {
+                    elm.disabled = false;
+                })
+            },
+            error: function(err) {
+                console.log(err)
+                $.toast({
+                    type: 'error',
+                    title: 'Notification',
+                    content: 'Error',
+                    delay: 3000,
+                });
+                DOM.allDeleteContactBtn.forEach(elm => {
+                    elm.disabled = false;
+                })
+            }
         });
     }
     const CVData = {
@@ -280,7 +334,9 @@ $cvInfo = getCVInfoPersonal($token);
             educationArea: document.getElementById("educationArea"),
             educationInput: document.getElementById("txtEducation"),
             windowEditor: window.editor,
-            saveCVBtn: document.getElementById("saveCVBtn")
+            saveCVBtn: document.getElementById("saveCVBtn"),
+            allDeleteContactBtn: document.querySelectorAll(".delete-contact-btn"),
+            contactsTab: document.getElementById("nav-contacts-tab")
         }
     }
     const onChangeInput = (inputId) => {
@@ -579,6 +635,12 @@ $cvInfo = getCVInfoPersonal($token);
                 }
             });
         }
+        DOM.allDeleteContactBtn.forEach(elm => {
+            elm.onmouseover = (e) => {
+                deleteCurrentDeleteBtnHoverIn = e.target;
+                console.log("[deleteCurrentDeleteBtnHoverIn]", deleteCurrentDeleteBtnHoverIn)
+            }
+        })
     }
     const focusIsHaveInput = () => {
         const DOM = getDOMControl();

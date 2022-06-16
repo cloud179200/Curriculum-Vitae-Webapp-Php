@@ -6,7 +6,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $contact_name = $_POST["contact_name"];
         $phone = $_POST["phone"];
         $email = $_POST["email"];
-        $result = addContact($cv_id, $contact_name, $phone, $email);
+        $message = $_POST["message"];
+        $result = addContact($cv_id, $contact_name, $phone, $email, $message);
         echo $result ? json_encode(array("success" => true)) : json_encode(array("error" => "something went wrong"));
         exit();
     }
