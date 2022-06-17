@@ -42,7 +42,7 @@ $allCVInfo = getCVInfoPublic($filter_job);
 </head>
 
 <body>
-    <div id="toast-container" class="toast-container position-absolute bottom-0 end-0 p-3 bottom-center">
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3 bottom-center">
     </div>
     <!-- detail Modal -->
     <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
@@ -175,222 +175,242 @@ $allCVInfo = getCVInfoPublic($filter_job);
     <!-- Template Javascript -->
     <script src="js/main.js"></script>
     <script src="js/index.js"></script>
-</body>
-<script>
-    const getDOMControl = () => {
-        return {
-            detailModalBody: document.getElementById("detailModalBody"),
-            spinnerDetailModal: document.getElementById("spinnerDetailModal"),
-            contactNameInput: document.getElementById("txtContactName"),
-            contactPhoneInput: document.getElementById("txtContactPhone"),
-            contactEmailInput: document.getElementById("txtContactEmail"),
-            contactMessageInput: document.getElementById("txtContactMessage"),
-            filterJobInput: document.getElementById("txtFilterJob"),
-            sendContactBtn: document.getElementById("sendContactBtn"),
-            filterJobBtn: document.getElementById("filterJobBtn"),
-            datalistOptionsOccupation: document.getElementById("datalistOptionsOccupation")
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="./js/init-firebase.js"></script>
+    <script>
+        let firstSnapCheck = false;
+        notificationRef.limitToLast(1).on('child_added', (snapshot) => {
+            if (!snapshot || !firstSnapCheck) {
+                firstSnapCheck = true;
+                return;
+            }
+            const {
+                type,
+                cv_id,
+                desired_job
+            } = snapshot.val();
+            type === NOTIFICATION_TYPE.NEW_CV_ENABLE && $.toast({
+                type: 'info',
+                title: 'Notification',
+                content: `New CV enabled, please reload to check! - ` + desired_job.toUpperCase(),
+                delay: 5000,
+            });
+        });
+        const getDOMControl = () => {
+            return {
+                detailModalBody: document.getElementById("detailModalBody"),
+                spinnerDetailModal: document.getElementById("spinnerDetailModal"),
+                contactNameInput: document.getElementById("txtContactName"),
+                contactPhoneInput: document.getElementById("txtContactPhone"),
+                contactEmailInput: document.getElementById("txtContactEmail"),
+                contactMessageInput: document.getElementById("txtContactMessage"),
+                filterJobInput: document.getElementById("txtFilterJob"),
+                sendContactBtn: document.getElementById("sendContactBtn"),
+                filterJobBtn: document.getElementById("filterJobBtn"),
+                datalistOptionsOccupation: document.getElementById("datalistOptionsOccupation")
+            }
         }
-    }
-    getDOMControl().filterJobBtn.onclick = () => {
-        const filterJobValue = getDOMControl().filterJobInput.value.trim();
-        window.location.replace("/baitaplon/index.php?filter_job=" + filterJobValue);
-    }
-    getDOMControl().datalistOptionsOccupation.innerHTML = `
+        getDOMControl().filterJobBtn.onclick = () => {
+            const filterJobValue = getDOMControl().filterJobInput.value.trim();
+            window.location.replace("/baitaplon/index.php?filter_job=" + filterJobValue);
+        }
+        getDOMControl().datalistOptionsOccupation.innerHTML = `
         ${[...occupations].map(occupation => `<option value="${occupation}" class="text-uppercase">${occupation}</option>`).join("")}
     `
-    const getAge = (dateString) => {
-        const today = new Date();
-        const birthDate = new Date(dateString);
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        return age;
-    }
-    let detailModalData = {};
-    let contactData = {
-        cv_id: "",
-        contact_name: "",
-        phone: "",
-        email: "",
-        message: ""
-    }
-    const isValidContactData = () => {
-        const emailReg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-        if (!emailReg.test(contactData.email)) {
-            return false;
-        }
-        return contactData.cv_id && contactData.contact_name && contactData.phone && contactData.email && true;
-    }
-    const onChangeInput = (inputId) => {
-        const DOM = getDOMControl();
-        switch (inputId) {
-            case "txtContactName":
-                contactData.contact_name = DOM.contactNameInput.value;
-                break;
-            case "txtContactPhone":
-                contactData.phone = DOM.contactPhoneInput.value;
-                break;
-            case "txtContactEmail":
-                contactData.email = DOM.contactEmailInput.value;
-                break;
-            case "txtContactMessage":
-                contactData.message = DOM.contactMessageInput.value;
-                break;
-            default:
-                break;
-        }
-        console.log("[contactData]", contactData)
-        DOM.sendContactBtn.disabled = !isValidContactData();
-    }
-    const onSendContactData = () => {
-        const DOM = getDOMControl();
-        const formData = new FormData();
-        formData.append("cv_id", contactData.cv_id)
-        formData.append("contact_name", contactData.contact_name)
-        formData.append("email", contactData.email)
-        formData.append("phone", contactData.phone)
-        formData.append("message", contactData.message)
-        DOM.sendContactBtn.disabled = true;
-        $.ajax({
-            type: "POST",
-            enctype: 'multipart/form-data',
-            url: "./fetch/post/addContact.php",
-            data: formData,
-            processData: false,
-            contentType: false,
-            cache: false,
-            timeout: 30000,
-            success: function(data) {
-                const {
-                    success,
-                    error
-                } = JSON.parse(data);
-                success && $.toast({
-                    type: 'success',
-                    title: 'Notification',
-                    content: 'Success',
-                    delay: 3000,
-                });
-                error && $.toast({
-                    type: 'error',
-                    title: 'Notification',
-                    content: 'Error',
-                    delay: 3000,
-                });
-                DOM.sendContactBtn.disabled = false;
-            },
-            error: function(err) {
-                console.log(err)
-                $.toast({
-                    type: 'error',
-                    title: 'Notification',
-                    content: 'Error',
-                    delay: 3000,
-                });
-                DOM.sendContactBtn.disabled = false;
+        const getAge = (dateString) => {
+            const today = new Date();
+            const birthDate = new Date(dateString);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
             }
-        });
-    }
-    const loadingDetailModalRenderControl = (loading = false) => {
-        const {
-            spinnerDetailModal
-        } = getDOMControl();
-        if (loading) {
-            spinnerDetailModal.classList.contains("d-none") && spinnerDetailModal.classList.remove("d-none");
-            return
+            return age;
         }
-        spinnerDetailModal.classList.add("d-none");
-    }
-    const getCVById = (id) => {
-        if (!id) {
-            return;
-        }
-        renderDetailModal({});
-        loadingDetailModalRenderControl(true);
-        $.ajax({
-            type: "GET",
-            url: "./fetch/get/getPublicCV.php?cv_id=" +
-                id,
-            data: {},
-            processData: false,
-            contentType: false,
-            cache: false,
-            timeout: 30000,
-            success: function(data) {
-                const jsonData = JSON.parse(data);
-                const {
-                    error
-                } = jsonData
-                error && $.toast({
-                    type: 'error',
-                    title: 'Notification',
-                    content: 'Error',
-                    delay: 3000,
-                });
-                !error && renderDetailModal(jsonData)
-                loadingDetailModalRenderControl(false);
-            },
-            error: function(err) {
-                console.log(err)
-                $.toast({
-                    type: 'error',
-                    title: 'Notification',
-                    content: 'Error',
-                    delay: 3000,
-                });
-                loadingDetailModalRenderControl(false);
-            }
-        });
-    }
-    const renderDetailModal = (raw_detail) => {
-        contactData = {
+        let detailModalData = {};
+        let contactData = {
             cv_id: "",
             contact_name: "",
             phone: "",
             email: "",
             message: ""
-        };
-        detailModalData = raw_detail;
-        if (detailModalData.detail) {
-            detailModalData.detail = JSON.parse(detailModalData.detail)
         }
-        console.log("[parseData]", detailModalData)
-        const DOM = getDOMControl();
-        if (Object.entries(detailModalData).length === 0) {
-            DOM.detailModalBody.innerHTML = "";
-            return
+        const isValidContactData = () => {
+            const emailReg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+            if (!emailReg.test(contactData.email)) {
+                return false;
+            }
+            return contactData.cv_id && contactData.contact_name && contactData.phone && contactData.email && true;
         }
-        const {
-            address,
-            cv_id,
-            date_of_birth,
-            gender,
-            name,
-            detail,
-            desired_job
-        } = detailModalData
-        // address: "Thanh Hóa"
-        // cv_id: "4"
-        // date_of_birth: "2000-09-17"
-        // desired_job: "blaster"
-        // detail:
-        //     careerGoals: "Nope"
-        // certificate: ""
-        // education: "<p>eqweqw2312fsdf213123123123123123</p>"
-        // experience: "<ul><li><i><strong>e12312dasdasdasd</strong></i></li><li><i><strong>ssaSSDASDAS</strong></i></li><li><i><strong>dfsdfsdfsd</strong></i></li></ul>"
-        // skill: "<p>12312312</p>" [
-        //     [Prototype]
-        // ]: Object
-        // gender: "0"
-        // name: "Việt Anh"
-        // phone: "0394252608"
-        // status: "1"
-        // username: "abcd"
-        const genderText = gender === "0" ? "Female" : "Male";
-        const age = ["", "null"].includes(date_of_birth) ? "" : getAge(date_of_birth) + " year old";
-        const basicInfoRender = `
+        const onChangeInput = (inputId) => {
+            const DOM = getDOMControl();
+            switch (inputId) {
+                case "txtContactName":
+                    contactData.contact_name = DOM.contactNameInput.value;
+                    break;
+                case "txtContactPhone":
+                    contactData.phone = DOM.contactPhoneInput.value;
+                    break;
+                case "txtContactEmail":
+                    contactData.email = DOM.contactEmailInput.value;
+                    break;
+                case "txtContactMessage":
+                    contactData.message = DOM.contactMessageInput.value;
+                    break;
+                default:
+                    break;
+            }
+            console.log("[contactData]", contactData)
+            DOM.sendContactBtn.disabled = !isValidContactData();
+        }
+        const onSendContactData = () => {
+            const DOM = getDOMControl();
+            const formData = new FormData();
+            formData.append("cv_id", contactData.cv_id)
+            formData.append("contact_name", contactData.contact_name)
+            formData.append("email", contactData.email)
+            formData.append("phone", contactData.phone)
+            formData.append("message", contactData.message)
+            DOM.sendContactBtn.disabled = true;
+            $.ajax({
+                type: "POST",
+                enctype: 'multipart/form-data',
+                url: "./fetch/post/addContact.php",
+                data: formData,
+                processData: false,
+                contentType: false,
+                cache: false,
+                timeout: 30000,
+                success: function(data) {
+                    const {
+                        success,
+                        error
+                    } = JSON.parse(data);
+                    success && $.toast({
+                        type: 'success',
+                        title: 'Notification',
+                        content: 'Success',
+                        delay: 3000,
+                    });
+                    error && $.toast({
+                        type: 'error',
+                        title: 'Notification',
+                        content: 'Error',
+                        delay: 3000,
+                    });
+                    DOM.sendContactBtn.disabled = false;
+                },
+                error: function(err) {
+                    console.log(err)
+                    $.toast({
+                        type: 'error',
+                        title: 'Notification',
+                        content: 'Error',
+                        delay: 3000,
+                    });
+                    DOM.sendContactBtn.disabled = false;
+                }
+            });
+        }
+        const loadingDetailModalRenderControl = (loading = false) => {
+            const {
+                spinnerDetailModal
+            } = getDOMControl();
+            if (loading) {
+                spinnerDetailModal.classList.contains("d-none") && spinnerDetailModal.classList.remove("d-none");
+                return
+            }
+            spinnerDetailModal.classList.add("d-none");
+        }
+        const getCVById = (id) => {
+            if (!id) {
+                return;
+            }
+            renderDetailModal({});
+            loadingDetailModalRenderControl(true);
+            $.ajax({
+                type: "GET",
+                url: "./fetch/get/getPublicCV.php?cv_id=" +
+                    id,
+                data: {},
+                processData: false,
+                contentType: false,
+                cache: false,
+                timeout: 30000,
+                success: function(data) {
+                    const jsonData = JSON.parse(data);
+                    const {
+                        error
+                    } = jsonData
+                    error && $.toast({
+                        type: 'error',
+                        title: 'Notification',
+                        content: 'Error',
+                        delay: 3000,
+                    });
+                    !error && renderDetailModal(jsonData)
+                    loadingDetailModalRenderControl(false);
+                },
+                error: function(err) {
+                    console.log(err)
+                    $.toast({
+                        type: 'error',
+                        title: 'Notification',
+                        content: 'Error',
+                        delay: 3000,
+                    });
+                    loadingDetailModalRenderControl(false);
+                }
+            });
+        }
+        const renderDetailModal = (raw_detail) => {
+            contactData = {
+                cv_id: "",
+                contact_name: "",
+                phone: "",
+                email: "",
+                message: ""
+            };
+            detailModalData = raw_detail;
+            if (detailModalData.detail) {
+                detailModalData.detail = JSON.parse(detailModalData.detail)
+            }
+            const DOM = getDOMControl();
+            if (Object.entries(detailModalData).length === 0) {
+                DOM.detailModalBody.innerHTML = "";
+                return
+            }
+            const {
+                address,
+                cv_id,
+                date_of_birth,
+                gender,
+                name,
+                detail,
+                desired_job
+            } = detailModalData
+            // address: "Thanh Hóa"
+            // cv_id: "4"
+            // date_of_birth: "2000-09-17"
+            // desired_job: "blaster"
+            // detail:
+            //     careerGoals: "Nope"
+            // certificate: ""
+            // education: "<p>eqweqw2312fsdf213123123123123123</p>"
+            // experience: "<ul><li><i><strong>e12312dasdasdasd</strong></i></li><li><i><strong>ssaSSDASDAS</strong></i></li><li><i><strong>dfsdfsdfsd</strong></i></li></ul>"
+            // skill: "<p>12312312</p>" [
+            //     [Prototype]
+            // ]: Object
+            // gender: "0"
+            // name: "Việt Anh"
+            // phone: "0394252608"
+            // status: "1"
+            // username: "abcd"
+            const genderText = gender === "0" ? "Female" : "Male";
+            const age = ["", "null"].includes(date_of_birth) ? "" : getAge(date_of_birth) + " year old";
+            const basicInfoRender = `
                     <div class="row">
                     <div class="col-8">
                         <div class="row pt-3">
@@ -444,28 +464,28 @@ $allCVInfo = getCVInfoPublic($filter_job);
                     </div>
                     </div>
         `;
-        const certificateRender = detail.certificate ? `
+            const certificateRender = detail.certificate ? `
         <div class="tab-pane pt-2 fade" id="nav-certificate" role="tabpanel" aria-labelledby="nav-certificate-tab" style="background-color: #FFFFFF;">
         <div class="row"><div class="col-12">${detail.certificate}</div></div>
         </div>
         ` : "";
-        const educationRender = detail.education ? `
+            const educationRender = detail.education ? `
         <div class="tab-pane pt-2 fade" id="nav-education" role="tabpanel" aria-labelledby="nav-education-tab" style="background-color: #FFFFFF;">
         <div class="row"><div class="col-12">${detail.education}</div></div>
         </div>
         ` : "";
-        const experienceRender = detail.experience ? `
+            const experienceRender = detail.experience ? `
         <div class="tab-pane pt-2 fade" id="nav-experience" role="tabpanel" aria-labelledby="nav-experience-tab" style="background-color: #FFFFFF;">
         <div class="row"><div class="col-12">${detail.experience}</div></div>
         </div>
         ` : "";
-        const skillRender = detail.skill ? `
+            const skillRender = detail.skill ? `
         <div class="tab-pane pt-2 fade" id="nav-skill" role="tabpanel" aria-labelledby="nav-skill-tab" style="background-color: #FFFFFF;">
         <div class="row"><div class="col-12">${detail.skill}</div></div>
         </div>
         ` : "";
-        contactData.cv_id = cv_id;
-        DOM.detailModalBody.innerHTML = `<nav>
+            contactData.cv_id = cv_id;
+            DOM.detailModalBody.innerHTML = `<nav>
                 <div class="nav nav-pills nav-justified nav-tabs custom-nav-tabs" id="nav-tab" role="tablist">
                     <span class="nav-link active custom-nav-link fw-bold" id="nav-basic-infomation-tab" data-bs-toggle="tab" data-bs-target="#nav-basic-infomation" type="button" role="tab" aria-controls="nav-basic-infomation" aria-selected="true">Basic</span>
                     ${certificateRender && `<span class="nav-link custom-nav-link fw-bold position-relative" id="nav-certificate-tab" data-bs-toggle="tab" data-bs-target="#nav-certificate" type="button" role="tab" aria-controls="nav-certificate" aria-selected="false">Certificate
@@ -531,6 +551,9 @@ $allCVInfo = getCVInfoPublic($filter_job);
                     </div>
                 </div>
             </div>`;
-    }
-</script>
+        }
+    </script>
+</body>
+
+
 </html>

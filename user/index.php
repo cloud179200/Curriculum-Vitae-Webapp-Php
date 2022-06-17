@@ -48,7 +48,7 @@ $cvInfo = getCVInfoPersonal($token);
 </head>
 
 <body>
-    <div id="toast-container" class="toast-container position-absolute bottom-0 end-0 p-3 bottom-center">
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3 bottom-center">
     </div>
     <!-- Spinner Start -->
     <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
@@ -146,14 +146,14 @@ $cvInfo = getCVInfoPersonal($token);
                             <div class="row p-0 m-0 mb-4">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="switchStatus" onchange="onChangeInput('switchStatus')">
-                                    <label class="form-check-label ml-2" for="flexSwitchCheckChecked">Job search status</label>
+                                    <label class="form-check-label ml-2" for="flexSwitchCheckChecked" <?php echo $cvInfo["status"] == "0" ? "" : "checked" ?>>Job search status</label>
                                 </div>
                             </div>
                             <div class="p-0 row flex-nowrap mb-4" id="careerGoalsArea">
                             </div>
                             <div class="p-0 row flex-nowrap mb-1">
                                 <div class="col-12">
-                                    <button id="saveCVBtn" class="btn btn-success w-100" onclick="onSaveCVData()" disabled>Save</button>
+                                    <button id="saveCVBtn" class="btn btn-success w-100" disabled>Save</button>
                                 </div>
                             </div>
                         </div>
@@ -214,391 +214,35 @@ $cvInfo = getCVInfoPersonal($token);
     <script src="../js/toast.js"></script>
     <!-- richtext-editor -->
     <script src="https://cdn.ckeditor.com/ckeditor5/34.1.0/classic/ckeditor.js"></script>
-</body>
-<script>
-    let tableContacts = null;
-    let deleteCurrentDeleteBtnHoverIn = null;
-    $(document).ready(function() {
-        tableContacts = $('#tableContacts').DataTable({
-            search: {
-                return: true,
-            },
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="../js/init-firebase.js"></script>
+    <script>
+        let tableContacts = null;
+        let deleteCurrentDeleteBtnHoverIn = null;
+        $(document).ready(function() {
+            tableContacts = $('#tableContacts').DataTable({
+                search: {
+                    return: true,
+                },
+            });
         });
-    });
 
-    const onDeleteContact = (contactId) => {
-        if (!contactId) {
-            return
-        }
-        const DOM = getDOMControl();
-        const formData = new FormData();
-        formData.append("contact_id", contactId)
-        DOM.allDeleteContactBtn.forEach(elm => {
-            elm.disabled = true
-        })
-        $.ajax({
-            type: "POST",
-            enctype: 'multipart/form-data',
-            url: "../fetch/post/removeContact.php",
-            data: formData,
-            processData: false,
-            contentType: false,
-            cache: false,
-            timeout: 30000,
-            success: function(data) {
-                const {
-                    success,
-                    error
-                } = JSON.parse(data);
-                if (success) {
-                    deleteCurrentDeleteBtnHoverIn && tableContacts.row($(deleteCurrentDeleteBtnHoverIn).parents('tr')).remove().draw();
-                    if(tableContacts.rows().count() === 0){
-                        DOM.contactsTab.innerHTML = "Contacts list";
-                    }
-                    $.toast({
-                        type: 'success',
-                        title: 'Notification',
-                        content: 'Success',
-                        delay: 3000,
-                    })
-                };
-                error && $.toast({
-                    type: 'error',
-                    title: 'Notification',
-                    content: 'Error',
-                    delay: 3000,
-                });
-                DOM.allDeleteContactBtn.forEach(elm => {
-                    elm.disabled = false;
-                })
-            },
-            error: function(err) {
-                console.log(err)
-                $.toast({
-                    type: 'error',
-                    title: 'Notification',
-                    content: 'Error',
-                    delay: 3000,
-                });
-                DOM.allDeleteContactBtn.forEach(elm => {
-                    elm.disabled = false;
-                })
+        const onDeleteContact = (contactId) => {
+            if (!contactId) {
+                return
             }
-        });
-    }
-    const CVData = {
-        cv_id: "<?php echo $cvInfo["cv_id"] ?>",
-        name: "<?php echo $cvInfo["name"] == "null" ? "" : $cvInfo["name"] ?>",
-        date_of_birth: "<?php echo $cvInfo["date_of_birth"] == "null" ? "" : $cvInfo["date_of_birth"] ?>",
-        address: "<?php echo $cvInfo["address"] == "null" ? "" : $cvInfo["address"] ?>",
-        phone: "<?php echo $cvInfo["phone"] == "null" ? "" : $cvInfo["phone"] ?>",
-        detail: <?php echo $cvInfo["detail"] == "null" ? '{careerGoals: "",skill: "",certificate: "",experience: "",education: ""}' : $cvInfo["detail"] ?>,
-        desiredJob: "<?php echo $cvInfo["desired_job"] == "null" ? "" : $cvInfo["desired_job"] ?>",
-        status: <?php echo $cvInfo["status"] == "0" ? "false" : "true" ?>
-    }
-    const cloneCVDataString = JSON.stringify(CVData);
-    const isValidCVData = () => {
-        const {
-            cv_id,
-            name,
-            date_of_birth,
-            address,
-            phone,
-            desiredJob
-        } = CVData;
-        const isSameAsOldData = cloneCVDataString === JSON.stringify(CVData);
-        const isfullRequiredData = Boolean(cv_id) && Boolean(name) && Boolean(date_of_birth) && Boolean(address) && Boolean(phone) && Boolean(desiredJob) && true;
-        return !isSameAsOldData && isfullRequiredData && true;
-    }
-    const getDOMControl = () => {
-        return {
-            nameInput: document.getElementById("txtName"),
-            nameArea: document.getElementById("nameArea"),
-            dateOfBirthInput: document.getElementById("txtDateOfBirth"),
-            dateOfBirthArea: document.getElementById("dateOfBirthArea"),
-            addressInput: document.getElementById("txtAddress"),
-            addressArea: document.getElementById("addressArea"),
-            phoneInput: document.getElementById("txtPhone"),
-            phoneArea: document.getElementById("phoneArea"),
-            deriseJobInput: document.getElementById("txtDeriseJob"),
-            deriseJobArea: document.getElementById("deriseJobArea"),
-            careerGoalsInput: document.getElementById("txtCareerGoals"),
-            careerGoalsArea: document.getElementById("careerGoalsArea"),
-            statusSwitch: document.getElementById("switchStatus"),
-            skillArea: document.getElementById("skillArea"),
-            skillInput: document.getElementById("txtSkill"),
-            certificateArea: document.getElementById("certificateArea"),
-            certificateInput: document.getElementById("txtCertificate"),
-            experienceArea: document.getElementById("experienceArea"),
-            experienceInput: document.getElementById("txtExperience"),
-            educationArea: document.getElementById("educationArea"),
-            educationInput: document.getElementById("txtEducation"),
-            windowEditor: window.editor,
-            saveCVBtn: document.getElementById("saveCVBtn"),
-            allDeleteContactBtn: document.querySelectorAll(".delete-contact-btn"),
-            contactsTab: document.getElementById("nav-contacts-tab")
-        }
-    }
-    const onChangeInput = (inputId) => {
-        const DOM = getDOMControl();
-        switch (inputId) {
-            case "txtName":
-                CVData.name = DOM.nameInput.value
-                break;
-            case "txtDateOfBirth":
-                CVData.date_of_birth = DOM.dateOfBirthInput.value
-                break;
-            case "txtAddress":
-                CVData.address = DOM.addressInput.value
-                break;
-            case "txtPhone":
-                CVData.phone = DOM.phoneInput.value
-                break;
-            case "txtDeriseJob":
-                CVData.desiredJob = DOM.deriseJobInput.value
-                break;
-            case "txtCareerGoals":
-                CVData.detail.careerGoals = DOM.careerGoalsInput.value
-                break;
-            case "switchStatus":
-                CVData.status = DOM.statusSwitch.checked
-                break;
-            case "txtSkill":
-                CVData.detail.skill = window.editor.getData();
-                break;
-            case "txtCertificate":
-                CVData.detail.certificate = window.editor.getData();
-                break;
-            case "txtExperience":
-                CVData.detail.experience = window.editor.getData();
-                break;
-            case "txtEducation":
-                CVData.detail.education = window.editor.getData();
-                break;
-            default:
-                break;
-        }
-        DOM.saveCVBtn.disabled = !isValidCVData();
-    }
-    const onBlurInput = () => {
-        initializationLabel()
-    }
-
-    const initializationOnClick = () => {
-        const DOM = getDOMControl();
-        DOM.nameArea.onclick = (e) => {
-            DOM.nameArea.innerHTML = `<div class="col-2">
-                <label class="col-form-label"><i class="fas fa-2x fa-file-signature text-dark"></i></label>
-            </div>
-            <div class="col-10">
-             <input type="text" class="form-control w-100 h-100" value="${CVData.name}" id="txtName" name="txtName" placeholder="Name" onchange="onChangeInput('txtName')" onblur="onBlurInput()">
-            </div>`;
-            DOM.nameArea.onclick = null;
-            focusIsHaveInput();
-        }
-        DOM.dateOfBirthArea.onclick = (e) => {
-            DOM.dateOfBirthArea.innerHTML = `<div class="col-2">
-                <label class="col-form-label"><i class="fas fa-2x fa-birthday-cake text-dark"></i></label>
-            </div>
-            <div class="col-10">
-             <input type="date" class="form-control w-100 h-100" value="${CVData.date_of_birth}" id="txtDateOfBirth" name="txtDateOfBirth" placeholder="Date of birth" onchange="onChangeInput('txtDateOfBirth')" onblur="onBlurInput()">
-            </div>`;
-            DOM.dateOfBirthArea.onclick = null;
-            focusIsHaveInput();
-        }
-        DOM.addressArea.onclick = (e) => {
-            DOM.addressArea.innerHTML = `<div class="col-2">
-                <label class="col-form-label"><i class="fas fa-2x fa-address-book text-dark"></i></label>
-            </div>
-            <div class="col-10">
-             <input type="text" class="form-control w-100 h-100" value="${CVData.address}" id="txtAddress" name="txtAddress" placeholder="Address" onchange="onChangeInput('txtAddress')" onblur="onBlurInput()">
-            </div>`;
-            DOM.addressArea.onclick = null;
-            focusIsHaveInput();
-        }
-        DOM.phoneArea.onclick = (e) => {
-            DOM.phoneArea.innerHTML = `
-            <div class="col-2">
-                <label class="col-form-label"><i class="fas fa-2x fa-mobile text-dark"></i></label>
-            </div>
-            <div class="col-10">
-             <input type="tel" class="form-control w-100 h-100" value="${CVData.phone}" id="txtPhone" name="txtPhone" placeholder="Phone number" onchange="onChangeInput('txtPhone')" onblur="onBlurInput()">
-            </div>`;
-            DOM.phoneArea.onclick = null;
-            focusIsHaveInput();
-        }
-        DOM.deriseJobArea.onclick = (e) => {
-            DOM.deriseJobArea.innerHTML = `
-            <div class="col-2">
-                <label class="col-form-label"><i class="fas fa-2x fa-briefcase text-dark"></i></label>
-            </div>
-            <div class="col-10">
-                <input class="form-control w-100 h-100" list="datalistOptionsOccupation" id="txtDeriseJob" name="txtDeriseJob" value="${CVData.desiredJob}" placeholder="Type to search job..." onchange="onChangeInput('txtDeriseJob')" onblur="onBlurInput()">
-                    <datalist id="datalistOptionsOccupation">
-                        ${[...occupations].map(occupation => `<option value="${occupation}" class="text-uppercase">${occupation}</option>`).join("")}
-                    </datalist>
-            </div>`;
-            DOM.deriseJobArea.onclick = null;
-            focusIsHaveInput();
-        }
-        DOM.careerGoalsArea.onclick = (e) => {
-            DOM.careerGoalsArea.innerHTML = `
-            <div class="col-2">
-                <label class="col-form-label"><i class="fas fa-2x fa-align-justify text-dark"></i></label>
-            </div>
-            <div class="col-10">
-            <div class="form-floating">
-                <textarea class="form-control" rows="5" placeholder="Career goals..." id="txtCareerGoals" name="txtCareerGoals" onchange="onChangeInput('txtCareerGoals')" onblur="onBlurInput()">${CVData.detail.careerGoals}</textarea>
-                <label>Career Goals</label>
-            </div>
-            </div>`;
-            DOM.careerGoalsArea.onclick = null;
-            focusIsHaveInput();
-        }
-        DOM.educationArea.onclick = (e) => {
-            DOM.educationArea.innerHTML = `
-            <div class="col-12 fw-bold h3">Education</div>
-            <div class="col-12">
-                <div id="txtEducation"></div>
-            </div>`;
-            DOM.educationArea.click = null;
-            ClassicEditor
-                .create(document.querySelector('#txtEducation')).then(editor => {
-                    window.editor = editor;
-                    window.editor.setData(CVData.detail.education);
-                    window.editor.focus();
-                    window.editor.model.document.on('change:data', () => {
-                        onChangeInput("txtEducation");
-                    });
-                    window.editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
-                        if (!isFocused) {
-                            window.editor.destroy().then(() => {
-                                    window.editor = null;
-                                    initializationLabel()
-                                })
-                                .catch(error => {
-                                    console.log(error);
-                                });
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-            focusIsHaveInput();
-        }
-        DOM.skillArea.onclick = (e) => {
-            DOM.skillArea.innerHTML = `
-            <div class="col-12 fw-bold h3">Skill</div>
-            <div class="col-12">
-                <div id="txtSkill"></div>
-            </div>`;
-            DOM.skillArea.onclick = null;
-            ClassicEditor
-                .create(document.querySelector('#txtSkill')).then(editor => {
-                    window.editor = editor;
-                    window.editor.setData(CVData.detail.skill)
-                    window.editor.focus();
-                    window.editor.model.document.on('change:data', () => {
-                        onChangeInput("txtSkill");
-                    });
-                    window.editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
-                        if (!isFocused) {
-                            window.editor.destroy().then(() => {
-                                    window.editor = null;
-                                    initializationLabel()
-                                })
-                                .catch(error => {
-                                    console.log(error);
-                                });
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-            focusIsHaveInput();
-        }
-        DOM.certificateArea.onclick = (e) => {
-            DOM.certificateArea.innerHTML = `
-            <div class="col-12 fw-bold h3">Certificate</div>
-            <div class="col-12">
-                <div id="txtCertificate"></div>
-            </div>`;
-            DOM.certificateArea.onclick = null;
-            ClassicEditor
-                .create(document.querySelector('#txtCertificate')).then(editor => {
-                    window.editor = editor;
-                    window.editor.setData(CVData.detail.certificate)
-                    window.editor.focus();
-                    window.editor.model.document.on('change:data', () => {
-                        onChangeInput("txtCertificate");
-                    });
-                    window.editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
-                        if (!isFocused) {
-                            window.editor.destroy().then(() => {
-                                    window.editor = null;
-                                    initializationLabel()
-                                })
-                                .catch(error => {
-                                    console.log(error);
-                                });
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-            focusIsHaveInput();
-        }
-        DOM.experienceArea.onclick = (e) => {
-            DOM.experienceArea.innerHTML = `
-            <div class="col-12 fw-bold h3">Experience</div>
-            <div class="col-12">
-                <div id="txtExperience"></div>
-            </div>`;
-            DOM.experienceArea.onclick = null;
-            ClassicEditor
-                .create(document.querySelector('#txtExperience')).then(editor => {
-                    window.editor = editor;
-                    window.editor.setData(CVData.detail.experience)
-                    window.editor.focus();
-                    window.editor.model.document.on('change:data', () => {
-                        onChangeInput("txtExperience");
-                    });
-                    window.editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
-                        if (!isFocused) {
-                            window.editor.destroy().then(() => {
-                                    window.editor = null;
-                                    initializationLabel()
-                                })
-                                .catch(error => {
-                                    console.log(error);
-                                });
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-            focusIsHaveInput();
-        }
-        DOM.saveCVBtn.onclick = (e) => {
-            e.preventDefault();
+            const DOM = getDOMControl();
             const formData = new FormData();
-            formData.append("cv_id", CVData.cv_id)
-            formData.append("name", CVData.name)
-            formData.append("address", CVData.address)
-            formData.append("phone", CVData.phone)
-            formData.append("date_of_birth", CVData.date_of_birth)
-            formData.append("detail", JSON.stringify(CVData.detail))
-            formData.append("status", CVData.status ? "1" : "0")
-            formData.append("desired_job", CVData.desiredJob)
-            e.target.disabled = true;
+            formData.append("contact_id", contactId)
+            DOM.allDeleteContactBtn.forEach(elm => {
+                elm.disabled = true
+            })
             $.ajax({
                 type: "POST",
                 enctype: 'multipart/form-data',
-                url: "../fetch/post/updateCV.php",
+                url: "../fetch/post/removeContact.php",
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -609,19 +253,27 @@ $cvInfo = getCVInfoPersonal($token);
                         success,
                         error
                     } = JSON.parse(data);
-                    success && $.toast({
-                        type: 'success',
-                        title: 'Notification',
-                        content: 'Success',
-                        delay: 3000,
-                    });
+                    if (success) {
+                        deleteCurrentDeleteBtnHoverIn && tableContacts.row($(deleteCurrentDeleteBtnHoverIn).parents('tr')).remove().draw();
+                        if (tableContacts.rows().count() === 0) {
+                            DOM.contactsTab.innerHTML = "Contacts list";
+                        }
+                        $.toast({
+                            type: 'success',
+                            title: 'Notification',
+                            content: 'Success',
+                            delay: 3000,
+                        })
+                    };
                     error && $.toast({
                         type: 'error',
                         title: 'Notification',
                         content: 'Error',
                         delay: 3000,
                     });
-                    e.target.disabled = false;
+                    DOM.allDeleteContactBtn.forEach(elm => {
+                        elm.disabled = false;
+                    })
                 },
                 error: function(err) {
                     console.log(err)
@@ -631,87 +283,463 @@ $cvInfo = getCVInfoPersonal($token);
                         content: 'Error',
                         delay: 3000,
                     });
-                    e.target.disabled = false;
+                    DOM.allDeleteContactBtn.forEach(elm => {
+                        elm.disabled = false;
+                    })
                 }
             });
         }
-        DOM.allDeleteContactBtn.forEach(elm => {
-            elm.onmouseover = (e) => {
-                deleteCurrentDeleteBtnHoverIn = e.target;
-                console.log("[deleteCurrentDeleteBtnHoverIn]", deleteCurrentDeleteBtnHoverIn)
+        const CVData = {
+            cv_id: "<?php echo $cvInfo["cv_id"] ?>",
+            name: "<?php echo $cvInfo["name"] == "null" ? "" : $cvInfo["name"] ?>",
+            date_of_birth: "<?php echo $cvInfo["date_of_birth"] == "null" ? "" : $cvInfo["date_of_birth"] ?>",
+            address: "<?php echo $cvInfo["address"] == "null" ? "" : $cvInfo["address"] ?>",
+            phone: "<?php echo $cvInfo["phone"] == "null" ? "" : $cvInfo["phone"] ?>",
+            detail: <?php echo $cvInfo["detail"] == "null" ? '{careerGoals: "",skill: "",certificate: "",experience: "",education: ""}' : $cvInfo["detail"] ?>,
+            desiredJob: "<?php echo $cvInfo["desired_job"] == "null" ? "" : $cvInfo["desired_job"] ?>",
+            status: <?php echo $cvInfo["status"] == "0" ? "false" : "true" ?>
+        }
+        let defaultStatus = CVData.status;
+        let cloneCVDataString = JSON.stringify(CVData);
+        const isValidCVData = (currentCVData, currentCloneCVDataString) => {
+            const {
+                cv_id,
+                name,
+                date_of_birth,
+                address,
+                phone,
+                desiredJob
+            } = currentCVData;
+
+            const isSameAsOldData = currentCloneCVDataString === JSON.stringify(currentCVData);
+            const isfullRequiredData = Boolean(cv_id) && Boolean(name) && Boolean(date_of_birth) && Boolean(address) && Boolean(phone) && Boolean(desiredJob) && true;
+            return !isSameAsOldData && isfullRequiredData && true;
+        }
+        const getDOMControl = () => {
+            return {
+                nameInput: document.getElementById("txtName"),
+                nameArea: document.getElementById("nameArea"),
+                dateOfBirthInput: document.getElementById("txtDateOfBirth"),
+                dateOfBirthArea: document.getElementById("dateOfBirthArea"),
+                addressInput: document.getElementById("txtAddress"),
+                addressArea: document.getElementById("addressArea"),
+                phoneInput: document.getElementById("txtPhone"),
+                phoneArea: document.getElementById("phoneArea"),
+                deriseJobInput: document.getElementById("txtDeriseJob"),
+                deriseJobArea: document.getElementById("deriseJobArea"),
+                careerGoalsInput: document.getElementById("txtCareerGoals"),
+                careerGoalsArea: document.getElementById("careerGoalsArea"),
+                statusSwitch: document.getElementById("switchStatus"),
+                skillArea: document.getElementById("skillArea"),
+                skillInput: document.getElementById("txtSkill"),
+                certificateArea: document.getElementById("certificateArea"),
+                certificateInput: document.getElementById("txtCertificate"),
+                experienceArea: document.getElementById("experienceArea"),
+                experienceInput: document.getElementById("txtExperience"),
+                educationArea: document.getElementById("educationArea"),
+                educationInput: document.getElementById("txtEducation"),
+                windowEditor: window.editor,
+                saveCVBtn: document.getElementById("saveCVBtn"),
+                allDeleteContactBtn: document.querySelectorAll(".delete-contact-btn"),
+                contactsTab: document.getElementById("nav-contacts-tab")
             }
-        })
-    }
-    const focusIsHaveInput = () => {
-        const DOM = getDOMControl();
-        if (DOM.addressInput) DOM.addressInput.focus();
-        if (DOM.nameInput) DOM.nameInput.focus();
-        if (DOM.dateOfBirthInput) DOM.dateOfBirthInput.focus();
-        if (DOM.phoneInput) DOM.phoneInput.focus();
-        if (DOM.deriseJobInput) DOM.deriseJobInput.focus();
-    }
-    const initializationLabel = () => {
-        const DOM = getDOMControl();
-        if (DOM.nameArea) DOM.nameArea.innerHTML = `<div class="col-2">
+        }
+        const onChangeInput = (inputId) => {
+            const DOM = getDOMControl();
+            switch (inputId) {
+                case "txtName":
+                    CVData.name = DOM.nameInput.value
+                    break;
+                case "txtDateOfBirth":
+                    CVData.date_of_birth = DOM.dateOfBirthInput.value
+                    break;
+                case "txtAddress":
+                    CVData.address = DOM.addressInput.value
+                    break;
+                case "txtPhone":
+                    CVData.phone = DOM.phoneInput.value
+                    break;
+                case "txtDeriseJob":
+                    CVData.desiredJob = DOM.deriseJobInput.value
+                    break;
+                case "txtCareerGoals":
+                    CVData.detail.careerGoals = DOM.careerGoalsInput.value
+                    break;
+                case "switchStatus":
+                    CVData.status = DOM.statusSwitch.checked
+                    break;
+                case "txtSkill":
+                    CVData.detail.skill = window.editor.getData();
+                    break;
+                case "txtCertificate":
+                    CVData.detail.certificate = window.editor.getData();
+                    break;
+                case "txtExperience":
+                    CVData.detail.experience = window.editor.getData();
+                    break;
+                case "txtEducation":
+                    CVData.detail.education = window.editor.getData();
+                    break;
+                default:
+                    break;
+            }
+            DOM.saveCVBtn.disabled = !isValidCVData(CVData, cloneCVDataString);
+        }
+        const onBlurInput = () => {
+            initializationLabel()
+        }
+
+        const initializationOnClick = () => {
+            const DOM = getDOMControl();
+            DOM.nameArea.onclick = (e) => {
+                DOM.nameArea.innerHTML = `<div class="col-2">
+                <label class="col-form-label"><i class="fas fa-2x fa-file-signature text-dark"></i></label>
+            </div>
+            <div class="col-10">
+             <input type="text" class="form-control w-100 h-100" value="${CVData.name}" id="txtName" name="txtName" placeholder="Name" onchange="onChangeInput('txtName')" onblur="onBlurInput()">
+            </div>`;
+                DOM.nameArea.onclick = null;
+                focusIsHaveInput();
+            }
+            DOM.dateOfBirthArea.onclick = (e) => {
+                DOM.dateOfBirthArea.innerHTML = `<div class="col-2">
+                <label class="col-form-label"><i class="fas fa-2x fa-birthday-cake text-dark"></i></label>
+            </div>
+            <div class="col-10">
+             <input type="date" class="form-control w-100 h-100" value="${CVData.date_of_birth}" id="txtDateOfBirth" name="txtDateOfBirth" placeholder="Date of birth" onchange="onChangeInput('txtDateOfBirth')" onblur="onBlurInput()">
+            </div>`;
+                DOM.dateOfBirthArea.onclick = null;
+                focusIsHaveInput();
+            }
+            DOM.addressArea.onclick = (e) => {
+                DOM.addressArea.innerHTML = `<div class="col-2">
+                <label class="col-form-label"><i class="fas fa-2x fa-address-book text-dark"></i></label>
+            </div>
+            <div class="col-10">
+             <input type="text" class="form-control w-100 h-100" value="${CVData.address}" id="txtAddress" name="txtAddress" placeholder="Address" onchange="onChangeInput('txtAddress')" onblur="onBlurInput()">
+            </div>`;
+                DOM.addressArea.onclick = null;
+                focusIsHaveInput();
+            }
+            DOM.phoneArea.onclick = (e) => {
+                DOM.phoneArea.innerHTML = `
+            <div class="col-2">
+                <label class="col-form-label"><i class="fas fa-2x fa-mobile text-dark"></i></label>
+            </div>
+            <div class="col-10">
+             <input type="tel" class="form-control w-100 h-100" value="${CVData.phone}" id="txtPhone" name="txtPhone" placeholder="Phone number" onchange="onChangeInput('txtPhone')" onblur="onBlurInput()">
+            </div>`;
+                DOM.phoneArea.onclick = null;
+                focusIsHaveInput();
+            }
+            DOM.deriseJobArea.onclick = (e) => {
+                DOM.deriseJobArea.innerHTML = `
+            <div class="col-2">
+                <label class="col-form-label"><i class="fas fa-2x fa-briefcase text-dark"></i></label>
+            </div>
+            <div class="col-10">
+                <input class="form-control w-100 h-100" list="datalistOptionsOccupation" id="txtDeriseJob" name="txtDeriseJob" value="${CVData.desiredJob}" placeholder="Type to search job..." onchange="onChangeInput('txtDeriseJob')" onblur="onBlurInput()">
+                    <datalist id="datalistOptionsOccupation">
+                        ${[...occupations].map(occupation => `<option value="${occupation}" class="text-uppercase">${occupation}</option>`).join("")}
+                    </datalist>
+            </div>`;
+                DOM.deriseJobArea.onclick = null;
+                focusIsHaveInput();
+            }
+            DOM.careerGoalsArea.onclick = (e) => {
+                DOM.careerGoalsArea.innerHTML = `
+            <div class="col-2">
+                <label class="col-form-label"><i class="fas fa-2x fa-align-justify text-dark"></i></label>
+            </div>
+            <div class="col-10">
+            <div class="form-floating">
+                <textarea class="form-control" rows="5" placeholder="Career goals..." id="txtCareerGoals" name="txtCareerGoals" onchange="onChangeInput('txtCareerGoals')" onblur="onBlurInput()">${CVData.detail.careerGoals}</textarea>
+                <label>Career Goals</label>
+            </div>
+            </div>`;
+                DOM.careerGoalsArea.onclick = null;
+                focusIsHaveInput();
+            }
+            DOM.educationArea.onclick = (e) => {
+                DOM.educationArea.innerHTML = `
+            <div class="col-12 fw-bold h3">Education</div>
+            <div class="col-12">
+                <div id="txtEducation"></div>
+            </div>`;
+                DOM.educationArea.click = null;
+                ClassicEditor
+                    .create(document.querySelector('#txtEducation')).then(editor => {
+                        window.editor = editor;
+                        window.editor.setData(CVData.detail.education);
+                        window.editor.focus();
+                        window.editor.model.document.on('change:data', () => {
+                            onChangeInput("txtEducation");
+                        });
+                        window.editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
+                            if (!isFocused) {
+                                window.editor.destroy().then(() => {
+                                        window.editor = null;
+                                        initializationLabel()
+                                    })
+                                    .catch(error => {
+                                        console.log(error);
+                                    });
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+                focusIsHaveInput();
+            }
+            DOM.skillArea.onclick = (e) => {
+                DOM.skillArea.innerHTML = `
+            <div class="col-12 fw-bold h3">Skill</div>
+            <div class="col-12">
+                <div id="txtSkill"></div>
+            </div>`;
+                DOM.skillArea.onclick = null;
+                ClassicEditor
+                    .create(document.querySelector('#txtSkill')).then(editor => {
+                        window.editor = editor;
+                        window.editor.setData(CVData.detail.skill)
+                        window.editor.focus();
+                        window.editor.model.document.on('change:data', () => {
+                            onChangeInput("txtSkill");
+                        });
+                        window.editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
+                            if (!isFocused) {
+                                window.editor.destroy().then(() => {
+                                        window.editor = null;
+                                        initializationLabel()
+                                    })
+                                    .catch(error => {
+                                        console.log(error);
+                                    });
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+                focusIsHaveInput();
+            }
+            DOM.certificateArea.onclick = (e) => {
+                DOM.certificateArea.innerHTML = `
+            <div class="col-12 fw-bold h3">Certificate</div>
+            <div class="col-12">
+                <div id="txtCertificate"></div>
+            </div>`;
+                DOM.certificateArea.onclick = null;
+                ClassicEditor
+                    .create(document.querySelector('#txtCertificate')).then(editor => {
+                        window.editor = editor;
+                        window.editor.setData(CVData.detail.certificate)
+                        window.editor.focus();
+                        window.editor.model.document.on('change:data', () => {
+                            onChangeInput("txtCertificate");
+                        });
+                        window.editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
+                            if (!isFocused) {
+                                window.editor.destroy().then(() => {
+                                        window.editor = null;
+                                        initializationLabel()
+                                    })
+                                    .catch(error => {
+                                        console.log(error);
+                                    });
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+                focusIsHaveInput();
+            }
+            DOM.experienceArea.onclick = (e) => {
+                DOM.experienceArea.innerHTML = `
+            <div class="col-12 fw-bold h3">Experience</div>
+            <div class="col-12">
+                <div id="txtExperience"></div>
+            </div>`;
+                DOM.experienceArea.onclick = null;
+                ClassicEditor
+                    .create(document.querySelector('#txtExperience')).then(editor => {
+                        window.editor = editor;
+                        window.editor.setData(CVData.detail.experience)
+                        window.editor.focus();
+                        window.editor.model.document.on('change:data', () => {
+                            onChangeInput("txtExperience");
+                        });
+                        window.editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
+                            if (!isFocused) {
+                                window.editor.destroy().then(() => {
+                                        window.editor = null;
+                                        initializationLabel()
+                                    })
+                                    .catch(error => {
+                                        console.log(error);
+                                    });
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+                focusIsHaveInput();
+            }
+            DOM.saveCVBtn.onclick = (e) => {
+                e.preventDefault();
+                const formData = new FormData();
+                formData.append("cv_id", CVData.cv_id)
+                formData.append("name", CVData.name)
+                formData.append("address", CVData.address)
+                formData.append("phone", CVData.phone)
+                formData.append("date_of_birth", CVData.date_of_birth)
+                formData.append("detail", JSON.stringify(CVData.detail))
+                formData.append("status", CVData.status ? "1" : "0")
+                formData.append("desired_job", CVData.desiredJob)
+                e.target.disabled = true;
+                $.ajax({
+                    type: "POST",
+                    enctype: 'multipart/form-data',
+                    url: "../fetch/post/updateCV.php",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    cache: false,
+                    timeout: 30000,
+                    success: function(data) {
+                        const {
+                            success,
+                            error
+                        } = JSON.parse(data);
+                        if (success) {
+                            if (!defaultStatus && CVData.status && true) {
+                                const newNoti = {
+                                    type: NOTIFICATION_TYPE.NEW_CV_ENABLE,
+                                    cv_id: CVData.cv_id,
+                                    desired_job: CVData.desiredJob
+                                }
+                                notificationRef.push(newNoti);
+                            } else {
+                                const newNoti = {
+                                    type: NOTIFICATION_TYPE.OTHER_CHANGED,
+                                    cv_id: CVData.cv_id,
+                                    desired_job: CVData.desiredJob
+                                }
+                                notificationRef.push(newNoti);
+                            }
+                            cloneCVDataString = JSON.stringify(CVData);
+                            defaultStatus = CVData.status;
+                            $.toast({
+                                type: 'success',
+                                title: 'Notification',
+                                content: 'Success',
+                                delay: 3000,
+                            });
+                            e.target.disabled = true;
+                            return
+                        }
+                        error && $.toast({
+                            type: 'error',
+                            title: 'Notification',
+                            content: 'Error',
+                            delay: 3000,
+                        });
+                        e.target.disabled = false;
+                    },
+                    error: function(err) {
+                        console.log(err)
+                        $.toast({
+                            type: 'error',
+                            title: 'Notification',
+                            content: 'Error',
+                            delay: 3000,
+                        });
+                        e.target.disabled = false;
+                    }
+                });
+            }
+            DOM.allDeleteContactBtn.forEach(elm => {
+                elm.onmouseover = (e) => {
+                    deleteCurrentDeleteBtnHoverIn = e.target;
+                    console.log("[deleteCurrentDeleteBtnHoverIn]", deleteCurrentDeleteBtnHoverIn)
+                }
+            })
+        }
+        const focusIsHaveInput = () => {
+            const DOM = getDOMControl();
+            if (DOM.addressInput) DOM.addressInput.focus();
+            if (DOM.nameInput) DOM.nameInput.focus();
+            if (DOM.dateOfBirthInput) DOM.dateOfBirthInput.focus();
+            if (DOM.phoneInput) DOM.phoneInput.focus();
+            if (DOM.deriseJobInput) DOM.deriseJobInput.focus();
+        }
+        const initializationLabel = () => {
+            const DOM = getDOMControl();
+            if (DOM.nameArea) DOM.nameArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-file-signature text-dark"></i></label>
             </div>
             <div class="col-10">
                 <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.name}">${CVData.name}</p></label>
             </div>`;
-        if (DOM.dateOfBirthArea) DOM.dateOfBirthArea.innerHTML = `<div class="col-2">
+            if (DOM.dateOfBirthArea) DOM.dateOfBirthArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-birthday-cake text-dark"></i></label>
             </div>
             <div class="col-10">
                 <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.date_of_birth}">${CVData.date_of_birth}</p></label>
             </div>`;
-        if (DOM.addressArea) DOM.addressArea.innerHTML = `<div class="col-2">
+            if (DOM.addressArea) DOM.addressArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-address-book text-dark"></i></label>
             </div>
             <div class="col-10">
                 <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.address}">${CVData.address}</p></label>
             </div>`;
-        if (DOM.phoneArea) DOM.phoneArea.innerHTML = `<div class="col-2">
+            if (DOM.phoneArea) DOM.phoneArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-mobile text-dark"></i></label>
             </div>
             <div class="col-10">
                 <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.phone}">${CVData.phone}</p></label>
             </div>`;
-        if (DOM.deriseJobArea) DOM.deriseJobArea.innerHTML = `<div class="col-2">
+            if (DOM.deriseJobArea) DOM.deriseJobArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-briefcase text-dark"></i></label>
             </div>
             <div class="col-10">
                 <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p class="text-uppercase" data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.desiredJob}">${CVData.desiredJob}</p></label>
             </div>`;
-        if (DOM.careerGoalsArea) DOM.careerGoalsArea.innerHTML = `<div class="col-2">
+            if (DOM.careerGoalsArea) DOM.careerGoalsArea.innerHTML = `<div class="col-2">
                 <label class="col-form-label"><i class="fas fa-2x fa-align-justify text-dark"></i></label>
             </div>
             <div class="col-10">
                 <label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center" ><p data-toggle="tooltip" data-bs-placement="bottom" title="${CVData.detail.careerGoals}">${CVData.detail.careerGoals}</p></label>
             </div>`;
-        if (DOM.skillArea) DOM.skillArea.innerHTML = `
+            if (DOM.skillArea) DOM.skillArea.innerHTML = `
              <div class="col-12 fw-bold h3">Skill</div>
             <div class="col-12 text-break">
             ${CVData.detail.skill || `<label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p>Click to edit...</p></lablel>`}
             </div>`;
-        if (DOM.educationArea) DOM.educationArea.innerHTML = `
+            if (DOM.educationArea) DOM.educationArea.innerHTML = `
             <div class="col-12 fw-bold h3">Education</div>
             <div class="col-12 text-break">
             ${CVData.detail.education|| `<label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p>Click to edit...</p></lablel>`}
             </div>`;
-        if (DOM.experienceArea) DOM.experienceArea.innerHTML = `
+            if (DOM.experienceArea) DOM.experienceArea.innerHTML = `
             <div class="col-12 fw-bold h3">Experience</div>
             <div class="col-12 text-break">
             ${CVData.detail.experience || `<label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p>Click to edit...</p></lablel>`}
             </div>`;
-        if (DOM.certificateArea) DOM.certificateArea.innerHTML = `
+            if (DOM.certificateArea) DOM.certificateArea.innerHTML = `
             <div class="col-12 fw-bold h3">Certificate</div>
             <div class="col-12 text-break">
             ${CVData.detail.certificate || `<label class="col-form-label btn btn-light shadow-sm w-100 h-100 d-flex align-items-center"><p>Click to edit...</p></lablel>`}
             </div>`;
-        DOM.statusSwitch.checked = CVData.status;
-        initializationOnClick();
-    }
-    initializationLabel();
-</script>
+            DOM.statusSwitch.checked = CVData.status;
+            initializationOnClick();
+        }
+        initializationLabel();
+    </script>
+</body>
+
 
 </html>

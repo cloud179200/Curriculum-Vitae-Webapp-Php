@@ -978,4 +978,7 @@ const occupations = [
   "yardmaster",
   "zoologist",
 ];
-
+const NOTIFICATION_TYPE = {
+  NEW_CV_ENABLE: "NEW_CV_ENABLE",
+  OTHER_CHANGED: "OTHER_CHANGED",
+};
