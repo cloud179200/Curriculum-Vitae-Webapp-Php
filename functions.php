@@ -7,7 +7,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
 
-include("C:\\xampp\\htdocs\\baitaplon\\vendor\\autoload.php");
+include("./vendor/autoload.php");
 function getContacts($token)
 {
     $contacts = array();

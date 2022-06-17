@@ -31,6 +31,12 @@ handleRoute();
 </head>
 
 <body class="overflow-hidden">
+  <!-- Spinner Start -->
+  <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+        <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
   <div class="row vh-100">
     <div class="col-1 p-0 vh-100">
       <a href="../index.php" class="btn btn-success pr-4 pl-4 d-flex align-items-center justify-content-center w-100 h-100">
@@ -39,7 +45,7 @@ handleRoute();
     </div>
     <div class="col-lg-5 col-md-11 p-0">
       <section class="vh-100" style="background-color: #eee;overflow-x: hidden;overflow-y: auto;">
-        <form novalidate method="POST" action="./register.php" class="container-xs py-1 vh-100 needs-validation wow zoomInUp <?php if (isset($_POST['btnRegister'])) {
+        <form novalidate method="POST" action="./register.php" data-wow-delay="1s" class="container-xs py-1 vh-100 needs-validation wow zoomInUp <?php if (isset($_POST['btnRegister'])) {
                                                                                                                               echo "was-validated";
                                                                                                                             }
                                                                                                                             ?>">

@@ -537,5 +537,4 @@ $allCVInfo = getCVInfoPublic($filter_job);
             </div>`;
     }
 </script>
-
 </html>

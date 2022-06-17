@@ -39,6 +39,12 @@
  </head>
 
  <body class="overflow-hidden">
+   <!-- Spinner Start -->
+   <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+     <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
+       <span class="sr-only">Loading...</span>
+     </div>
+   </div>
    <div class="row vh-100 overflow-hidden">
      <div class="col-1 p-0 vh-100">
        <a href="../index.php" class="btn btn-success pr-4 pl-4 d-flex align-items-center justify-content-center w-100 h-100">
@@ -69,7 +75,7 @@
         }
         ?>
        <section class="vh-100 " style="background-color: #eee;overflow-x: hidden;overflow-y: auto;">
-         <form novalidate method="POST" action="./login.php" class="container py-5 h-100 wow zoomInUp needs-validation <?php if (isset($_POST['btnLogin'])) echo "was-validated" ?>">
+         <form novalidate  method="POST" action="./login.php" data-wow-delay="1s" class="container py-5 h-100 wow zoomInUp needs-validation <?php if (isset($_POST['btnLogin'])) echo "was-validated" ?>">
            <div class="row d-flex justify-content-center align-items-center h-100">
              <div class="col-12 col-md-9 col-lg-9 col-xl-9">
                <div class="card shadow-2-strong" style="border-radius: 1rem;">
