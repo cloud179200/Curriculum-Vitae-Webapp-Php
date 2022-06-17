@@ -467,9 +467,9 @@ function logout($isVerifySuccess = false)
     if (!$conn) {
         die("Ko the ket noi");
     }
-    if (isset($_SESSION["username"])) {
-        $username = $_SESSION["username"];
-        $sql = "DELETE FROM users_online WHERE username='$username'";
+    if (isset($_COOKIE["token"])) {
+        $token = $_COOKIE["token"];
+        $sql = "DELETE FROM users_online WHERE token='$token'";
         mysqli_query($conn, $sql);
     }
     mysqli_close($conn);
