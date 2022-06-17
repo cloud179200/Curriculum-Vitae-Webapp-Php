@@ -45,7 +45,7 @@
          <i class="d-inline fa fa-2x fa-arrow-left"></i>
        </a>
      </div>
-     <div class="col-5 p-0">
+     <div class="col-lg-5 col-md-11 p-0">
        <?php
         $errors = array();
         if (isset($_POST['btnLogin'])) {
@@ -68,7 +68,7 @@
           }
         }
         ?>
-       <section class="vh-100 " style="background-color: #eee;">
+       <section class="vh-100 " style="background-color: #eee;overflow-x: hidden;overflow-y: auto;">
          <form novalidate method="POST" action="./login.php" class="container py-5 h-100 wow zoomInUp needs-validation <?php if (isset($_POST['btnLogin'])) echo "was-validated" ?>">
            <div class="row d-flex justify-content-center align-items-center h-100">
              <div class="col-12 col-md-9 col-lg-9 col-xl-9">
@@ -109,7 +109,7 @@
          </form>
        </section>
      </div>
-     <div class="col-6 p-0">
+     <div class="col-lg-6 col-md-0 p-0">
        <div id="carouselExampleInterval" class="carousel slide" data-bs-ride="carousel">
          <div class="carousel-inner">
            <div class="carousel-item active">
