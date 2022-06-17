@@ -37,9 +37,9 @@ handleRoute();
         <i class="d-inline fa fa-2x fa-arrow-left"></i>
       </a>
     </div>
-    <div class="col-5 p-0">
-      <section class="vh-100" style="background-color: #eee;">
-        <form novalidate method="POST" action="./register.php" class="container-xs py-1 h-100 needs-validation wow zoomInUp <?php if (isset($_POST['btnRegister'])) {
+    <div class="col-lg-5 col-md-11 p-0">
+      <section class="vh-100" style="background-color: #eee;overflow-x: hidden;overflow-y: auto;">
+        <form novalidate method="POST" action="./register.php" class="container-xs py-1 vh-100 needs-validation wow zoomInUp <?php if (isset($_POST['btnRegister'])) {
                                                                                                                               echo "was-validated";
                                                                                                                             }
                                                                                                                             ?>">
@@ -155,7 +155,7 @@ handleRoute();
                   <div class="form-outline mb-4">
                     <label class="form-label float-start">Gender</label>
                     <select id="txtGender" name="txtGender" class="form-select" aria-label="Gender select" required>
-                      <option <?php if (!isset($_POST['txtGender'])) echo "selected"; ?>>Select gender...</option>
+                      <option disabled value="" <?php if (!isset($_POST['txtGender'])) echo "selected"; ?>>Select gender...</option>
                       <option value="0" <?php if (isset($_POST['txtGender']) && $_POST['txtGender'] == "0") echo "selected"; ?>>Female</option>
                       <option value="1" <?php if (isset($_POST['txtGender']) && $_POST['txtGender'] == "1") echo "selected"; ?>>Male</option>
                     </select>
@@ -182,7 +182,7 @@ handleRoute();
         </form>
       </section>
     </div>
-    <div class="col-6 p-0">
+    <div class="col-lg-6 col-md-0 p-0">
       <div id="carouselExampleInterval" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
           <div class="carousel-item active">
