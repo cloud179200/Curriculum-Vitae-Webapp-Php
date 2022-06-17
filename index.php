@@ -93,9 +93,8 @@ $allCVInfo = getCVInfoPublic($filter_job);
         <div class="container d-flex justify-content-center align-items-center">
             <div class="row w-75">
                 <div class="col-10">
-                    <input class="form-control w-100 h-100" list="datalistOptionsOccupation" id="txtFilterJob" name="txtFilterJob" placeholder="Filter job...">
+                    <input class="form-control w-100 h-100" list="datalistOptionsOccupation" value="<?php echo $filter_job; ?>" id="txtFilterJob" name="txtFilterJob" placeholder="Filter job...">
                     <datalist id="datalistOptionsOccupation">
-                        ${[...occupations].map(occupation => `<option value="${occupation}" class="text-uppercase">${occupation}</option>`).join("")}
                     </datalist>
                 </div>
                 <div class="col-2">
@@ -194,9 +193,6 @@ $allCVInfo = getCVInfoPublic($filter_job);
     }
     getDOMControl().filterJobBtn.onclick = () => {
         const filterJobValue = getDOMControl().filterJobInput.value.trim();
-        if (!filterJobValue) {
-            return;
-        }
         window.location.replace("/baitaplon/index.php?filter_job=" + filterJobValue);
     }
     getDOMControl().datalistOptionsOccupation.innerHTML = `
