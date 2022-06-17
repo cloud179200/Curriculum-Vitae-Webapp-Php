@@ -7,7 +7,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
 
-include("./vendor/autoload.php");
+require_once __DIR__ . '/vendor/autoload.php';
 function getContacts($token)
 {
     $contacts = array();
